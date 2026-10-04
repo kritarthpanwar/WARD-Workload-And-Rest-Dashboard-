@@ -51,8 +51,11 @@ export function WeeklyReport({ unit, week, scenario, full }: { unit: string; wee
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    setError(null);
-    managerApi<Report>(`/reports/weekly/${unit}/${week}?scenario=${scenario}`).then(setReport, (e) => {
+    if (!unit || !week) return;
+    managerApi<Report>(`/reports/weekly/${unit}/${week}?scenario=${scenario}`).then((r) => {
+      setReport(r);
+      setError(null);
+    }, (e) => {
       setReport(null);
       setError(e.status === 404 ? "No report for this unit and week." : e.message);
     });
@@ -65,8 +68,8 @@ export function WeeklyReport({ unit, week, scenario, full }: { unit: string; wee
   return (
     <div className="stack">
       <div>
-        <div className="muted">Week of {fmtWeek(report.week_start)}</div>
-        <h3 style={{ fontSize: 16 }}>{n.headline}</h3>
+        <div className="muted">Week of {fmtWeek(report.week_start)} · summary</div>
+        <h2 style={{ marginTop: 2 }}>{n.headline}</h2>
       </div>
       {lines.length > 0 && (
         <ul style={{ margin: 0, paddingLeft: 18 }}>
@@ -76,13 +79,6 @@ export function WeeklyReport({ unit, week, scenario, full }: { unit: string; wee
         </ul>
       )}
       {n.data_note && <p className="sub">{n.data_note}</p>}
-      <p className="muted">
-        {report.source === "gemini"
-          ? "Wording by Gemini from number-free placeholders; every number was inserted by code after validation."
-          : "Wording from the built-in template."}
-        {report.payload_json.rejection ? ` A model draft was rejected (${report.payload_json.rejection}).` : ""} This
-        describes what changed, not why.
-      </p>
       {full && (
         <>
           <div className="scroll-x">
@@ -128,10 +124,6 @@ export function WeeklyReport({ unit, week, scenario, full }: { unit: string; wee
               Actions logged: {report.actions.map((a) => a.action_type.replaceAll("_", " ") + (a.note ? ` (${a.note})` : "")).join("; ")}
             </p>
           )}
-          <p className="muted">
-            Proportions are rounded to the nearest 10%. The red-shift range runs from “missing shifts were like the
-            recorded ones” to “missing shifts were all red”.
-          </p>
         </>
       )}
     </div>

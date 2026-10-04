@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ErrorLine, Panel, useRole } from "@/components/ui";
+import { ErrorLine, useRole } from "@/components/ui";
 import { NURSE_API, authHeader, nurseApi } from "@/lib/api";
 
 type Req = { request_id: string; display_name: string; recipient_type: string; unit_name: string };
@@ -55,11 +55,19 @@ export default function ReliefPage() {
   return (
     <main className="narrow">
       <h1>Relief requests</h1>
-      <p className="sub">You see who asked for relief. No heart rate, steps, hours, location or history.</p>
-      <Panel title="Waiting now" mode="live">
+      <p className="sub">Who is asking for relief right now.</p>
+      <div className="row" style={{ margin: "14px 4px 10px" }}>
+        <span className="badge">LIVE</span>
+      </div>
+      <div>
         <ErrorLine error={error} />
         {reqs === null && !error && <p className="sub">Connecting…</p>}
-        {reqs?.length === 0 && <p className="sub">Nobody is waiting for relief.</p>}
+        {reqs?.length === 0 && (
+          <section className="panel result">
+            <h2>All clear</h2>
+            <p className="sub" style={{ marginTop: 6 }}>Nobody is waiting for relief.</p>
+          </section>
+        )}
         {reqs?.map((r) => (
           <div className="relief-item" key={r.request_id}>
             <div className="name">
@@ -76,8 +84,7 @@ export default function ReliefPage() {
             </button>
           </div>
         ))}
-        <p className="muted">A request is deleted as soon as it is marked handled. Only a weekly unit count remains.</p>
-      </Panel>
+      </div>
     </main>
   );
 }

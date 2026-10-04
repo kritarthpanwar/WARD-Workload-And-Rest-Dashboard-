@@ -2,14 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Break, LiveChart, Win } from "@/components/LiveChart";
-import { BandChip, ErrorLine, Mode, Panel, useRole } from "@/components/ui";
+import { BAND_COLOR, BandChip, ErrorLine, Icon, Mode, More, Badge, Panel, Ring, useRole } from "@/components/ui";
 import { fmtDay, fmtTime, hm, nurseApi } from "@/lib/api";
 
 type Me = {
   display_name: string;
   unit_name: string;
   onboarded: boolean;
-  birth_year: number | null;
   baseline_status: string;
   relief_recipient: string;
   auto_relief: boolean;
@@ -53,7 +52,6 @@ type Card = {
   coverage_pct: number;
   max_gap_min: number;
   ratio_status: string;
-  drained_rating: number | null;
 };
 
 type Proposal = { end_ts: string; breaks: { id: string; start_ts: string; end_ts: string }[] };
@@ -63,13 +61,22 @@ const RECIPIENTS = [
   ["buddy", "Break buddy"],
   ["float", "Float nurse"],
 ] as const;
-
 const recipientLabel = (v: string) => RECIPIENTS.find(([k]) => k === v)?.[1] ?? v;
+
+const LOAD_WORD: Record<string, string> = { green: "Light to moderate", amber: "Heavy", red: "Very heavy", insufficient: "Not enough data" };
+const SHIFT_WORD: Record<string, [string, string]> = {
+  green: ["Green shift", "Load and breaks were within the usual range."],
+  amber: ["Amber shift", "This shift was heavier than usual."],
+  red: ["Red shift", "This shift counts as overloaded."],
+  insufficient: ["Not enough data", "Too little was recorded to rate this shift. It is never counted as green."],
+};
+
+type Tab = "today" | "history" | "settings";
 
 export default function NursePage() {
   const session = useRole("nurse");
   const [me, setMe] = useState<Me | null>(null);
-  const [tab, setTab] = useState<"shift" | "history" | "settings" | "privacy">("shift");
+  const [tab, setTab] = useState<Tab>("today");
   const [error, setError] = useState<string | null>(null);
 
   const loadMe = useCallback(() => {
@@ -90,21 +97,23 @@ export default function NursePage() {
 
   return (
     <main className="narrow">
-      <h1>{me.display_name}</h1>
-      <p className="sub">
-        {me.unit_name} · baseline: {me.baseline_status}
-      </p>
-      <div className="tabs">
-        {(["shift", "history", "settings", "privacy"] as const).map((t) => (
-          <button key={t} className={tab === t ? "on" : ""} onClick={() => setTab(t)}>
-            {{ shift: "Shift", history: "History", settings: "Settings", privacy: "Privacy" }[t]}
-          </button>
-        ))}
-      </div>
-      {tab === "shift" && <ShiftTab me={me} />}
+      {tab === "today" && <Today me={me} />}
       {tab === "history" && <History />}
       {tab === "settings" && <Settings me={me} reload={loadMe} />}
-      {tab === "privacy" && <Privacy me={me} />}
+      <nav className="tabbar">
+        {(
+          [
+            ["today", "Today", "heart"],
+            ["history", "History", "list"],
+            ["settings", "Settings", "gear"],
+          ] as const
+        ).map(([key, label, icon]) => (
+          <button key={key} className={tab === key ? "on" : ""} onClick={() => setTab(key)}>
+            <Icon name={icon} />
+            {label}
+          </button>
+        ))}
+      </nav>
     </main>
   );
 }
@@ -112,67 +121,72 @@ export default function NursePage() {
 // ------------------------------------------------------------- onboarding
 
 function Onboarding({ me, done }: { me: Me; done: () => void }) {
-  const [consent, setConsent] = useState(false);
+  const [step, setStep] = useState(0);
   const [birthYear, setBirthYear] = useState("");
   const [pattern, setPattern] = useState("day");
   const [recipient, setRecipient] = useState("charge");
   const [error, setError] = useState<string | null>(null);
   const year = Number(birthYear);
-  const valid = consent && year >= 1940 && year <= 2010;
 
   return (
     <main className="narrow">
-      <h1>Welcome, {me.display_name}</h1>
-      <p className="sub">{me.unit_name}</p>
-      <Panel title="Before you opt in">
-        <div className="stack">
-          <p>
-            ShiftLoad records heart rate and steps during your shifts and turns them into a workload record:
-            physical load and how long you went without a break. It does not diagnose anything.
-          </p>
-          <p className="note">{me.purpose_limit}</p>
-          <p className="sub">
-            Your manager never sees your data — only weekly unit totals from groups of five or more nurses. Raw
-            heart-rate data is deleted when each shift is finalized. You can pause or withdraw at any time.
-          </p>
-          <label className="row">
-            <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-            <span>I understand and want to opt in.</span>
-          </label>
+      <div className="dots" style={{ marginTop: 12 }}>
+        {[0, 1, 2].map((i) => (
+          <span key={i} className={i === step ? "on" : ""} />
+        ))}
+      </div>
+      {step === 0 && (
+        <div className="fade-in stack">
+          <h1>Hi {me.display_name.split(" ")[0]}</h1>
+          <p className="sub">ShiftLoad keeps an automatic record of how heavy your shifts are and whether you got a break.</p>
+          <div className="list">
+            <div>Your manager never sees your data — only weekly totals for groups of five or more.</div>
+            <div>Raw heart-rate data is deleted when each shift ends.</div>
+            <div>You can pause or withdraw at any time.</div>
+            <div className="note">{me.purpose_limit}</div>
+          </div>
+          <button className="primary big" onClick={() => setStep(1)}>
+            I understand — opt in
+          </button>
         </div>
-      </Panel>
-      <Panel title="About you">
-        <div className="stack">
-          <label className="field">
-            Birth year (used to estimate maximum heart rate)
-            <input type="number" inputMode="numeric" placeholder="e.g. 1994" value={birthYear} onChange={(e) => setBirthYear(e.target.value)} />
-          </label>
-          <label className="field">
-            Usual rotation (sets default shift times)
-            <select value={pattern} onChange={(e) => setPattern(e.target.value)}>
-              <option value="day">Days, 07:00–19:00</option>
-              <option value="night">Nights, 19:00–07:00</option>
-              <option value="rotating">Rotating days and nights</option>
-            </select>
-          </label>
-          <label className="field">
-            Who should get your relief requests?
-            <select value={recipient} onChange={(e) => setRecipient(e.target.value)}>
-              {RECIPIENTS.map(([k, label]) => (
-                <option key={k} value={k}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <p className="muted">
-            The phone app that reads Health Connect and imports your last 30 days is not built yet. Until then your
-            resting heart rate comes from your first recording and your baseline stays provisional.
-          </p>
+      )}
+      {step === 1 && (
+        <div className="fade-in stack">
+          <h1>About you</h1>
+          <Panel>
+            <div className="stack">
+              <label className="field">
+                Birth year (to estimate your max heart rate)
+                <input type="number" inputMode="numeric" placeholder="e.g. 1994" value={birthYear} onChange={(e) => setBirthYear(e.target.value)} />
+              </label>
+              <label className="field">
+                Usual shifts
+                <select value={pattern} onChange={(e) => setPattern(e.target.value)}>
+                  <option value="day">Days, 07:00–19:00</option>
+                  <option value="night">Nights, 19:00–07:00</option>
+                  <option value="rotating">Rotating</option>
+                </select>
+              </label>
+            </div>
+          </Panel>
+          <button className="primary big" disabled={!(year >= 1940 && year <= 2010)} onClick={() => setStep(2)}>
+            Continue
+          </button>
+        </div>
+      )}
+      {step === 2 && (
+        <div className="fade-in stack">
+          <h1>Who should get your relief requests?</h1>
+          <div className="choice">
+            {RECIPIENTS.map(([k, label]) => (
+              <button key={k} className={recipient === k ? "pressed" : ""} onClick={() => setRecipient(k)}>
+                {label}
+              </button>
+            ))}
+          </div>
           <ErrorLine error={error} />
           <button
             className="primary big"
-            disabled={!valid}
             onClick={() =>
               nurseApi("/onboarding", {
                 birth_year: year,
@@ -181,28 +195,27 @@ function Onboarding({ me, done }: { me: Me; done: () => void }) {
               }).then(done, (e) => setError(e.message))
             }
           >
-            Opt in
+            Done
           </button>
         </div>
-      </Panel>
+      )}
     </main>
   );
 }
 
-// ------------------------------------------------------------------ shift
+// ------------------------------------------------------------------ today
 
-function ShiftTab({ me }: { me: Me }) {
+function Today({ me }: { me: Me }) {
   const [cur, setCur] = useState<Current | null>(null);
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [card, setCard] = useState<Card | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [recipient, setRecipient] = useState(me.relief_recipient);
   const autoSent = useRef<string | null>(null);
 
   const refresh = useCallback(() => {
     nurseApi<Current>("/me/shift/current").then(setCur, (e) => setError(e.message));
   }, []);
-
   useEffect(() => {
     refresh();
     const id = setInterval(refresh, 1000);
@@ -210,10 +223,9 @@ function ShiftTab({ me }: { me: Me }) {
   }, [refresh]);
 
   const shift = cur?.shift ?? null;
-
   const requestRelief = useCallback(() => {
-    nurseApi("/relief", { recipient_type: recipient }).then(refresh, (e) => setError(e.message));
-  }, [recipient, refresh]);
+    nurseApi("/relief", { recipient_type: me.relief_recipient }).then(refresh, (e) => setError(e.message));
+  }, [me.relief_recipient, refresh]);
 
   // pre-enabled auto-request: sent once per shift when the nudge fires
   useEffect(() => {
@@ -225,49 +237,52 @@ function ShiftTab({ me }: { me: Me }) {
 
   if (!cur) return <ErrorLine error={error} />;
 
+  const startReplay = (speed: number) => {
+    setCard(null);
+    setError(null);
+    nurseApi("/replay/start", { speed }).then(refresh, (e) => setError(e.message));
+  };
+
   if (!shift) {
     return (
-      <>
-        {card && <ShiftCard card={card} />}
-        <Panel title="No shift running">
-          <div className="stack">
-            <p className="sub">
-              Shifts normally start by themselves from your rotation once the phone app is connected. For now you
-              can replay a recorded day through the same pipeline.
-            </p>
-            <button
-              className="primary big"
-              onClick={() => {
-                setCard(null);
-                setError(null);
-                nurseApi("/replay/start", { speed: 8 }).then(refresh, (e) => setError(e.message));
-              }}
-            >
-              Replay a recorded day
+      <div className="fade-in">
+        <h1>{card ? "Shift summary" : "Today"}</h1>
+        <p className="sub" style={{ marginBottom: 16 }}>
+          {me.display_name} · {me.unit_name}
+        </p>
+        {card ? (
+          <>
+            <ShiftCard card={card} />
+            <button className="big" onClick={() => setCard(null)}>
+              Done
             </button>
-            <button
-              onClick={() => {
-                setCard(null);
-                setError(null);
-                nurseApi("/replay/start", { speed: 60 }).then(refresh, (e) => setError(e.message));
-              }}
-            >
-              Replay fast (about 12 seconds)
-            </button>
-            <p className="muted">
-              The recorded day is a simulated recording, not real watch data: brisk walks, still periods, two breaks,
-              a block of lifting with no steps, and 40 minutes with the watch off.
-            </p>
+          </>
+        ) : (
+          <>
+            <Panel>
+              <div className="result">
+                <h2>No shift running</h2>
+                <p className="sub" style={{ marginTop: 6 }}>Play back a recorded day to see how it works.</p>
+              </div>
+              <div className="stack">
+                <button className="primary big" onClick={() => startReplay(8)}>
+                  Play a recorded day
+                </button>
+                <button className="big" onClick={() => startReplay(60)}>
+                  Play it fast (12 seconds)
+                </button>
+              </div>
+            </Panel>
             <ErrorLine error={error} />
-          </div>
-        </Panel>
-      </>
+          </>
+        )}
+      </div>
     );
   }
 
   if (proposal) {
     return (
-      <EndPrompt
+      <EndFlow
         shiftId={shift.shift_id}
         proposal={proposal}
         cancel={() => setProposal(null)}
@@ -281,87 +296,90 @@ function ShiftTab({ me }: { me: Me }) {
   }
 
   const m = cur.metrics;
-  return (
-    <>
-      {cur.nudge && (
-        <div className="banner">
-          <strong>{hm(cur.since_break_min)} without a break.</strong> You can ask for relief below.
-        </div>
-      )}
-      <Panel
-        title={`${shift.shift_type === "day" ? "Day" : "Night"} shift · started ${fmtTime(shift.start_ts)}`}
-        mode={shift.data_mode}
-        modeNote={shift.data_mode === "replay" ? "simulated recording" : undefined}
-      >
-        <p className="sub">
-          {hm(cur.elapsed_min)} in{cur.replay_running ? " · replay running" : ""}
-        </p>
-        <div className="tiles">
-          <div className="tile">
-            <div className="label">Physical load so far</div>
-            <div className="value">
-              {m.mean_pct_hrr === null ? "—" : m.mean_pct_hrr.toFixed(0)}
-              <span className="unit">% reserve</span>
-            </div>
-            <BandChip band={cur.phys_band_so_far} />
-          </div>
-          <div className="tile">
-            <div className="label">Since last break</div>
-            <div className="value">{hm(cur.since_break_min)}</div>
-          </div>
-          <div className="tile">
-            <div className="label">Stress indicator</div>
-            <div className="value">
-              {m.unexplained_hr_min}
-              <span className="unit"> min</span>
-            </div>
-          </div>
-          <div className="tile">
-            <div className="label">Recording coverage</div>
-            <div className="value">
-              {m.coverage_pct.toFixed(0)}
-              <span className="unit">%</span>
-            </div>
-          </div>
-        </div>
-        <h3>Physical load (% of heart-rate reserve)</h3>
-        <LiveChart windows={cur.windows} breaks={cur.suggested_breaks} startIso={shift.start_ts} elapsed={cur.elapsed_min} />
-        <p className="note" style={{ marginTop: 10 }}>
-          Stress indicator: minutes when your heart rate was well above what your steps would predict while you
-          were still. A high heart rate while stationary points to a stressful situation. Hard physical effort
-          without steps counts as physical load instead. This is not a diagnosis and it does not set the band.
-        </p>
-        <p className="muted">
-          Expected-heart-rate model: {cur.model.name}
-          {cur.model.trained ? "" : " (not trained yet)"} · baseline: {cur.baseline_status} · resting HR{" "}
-          {cur.hr_rest.toFixed(0)} bpm
-        </p>
-      </Panel>
+  const since = cur.since_break_min;
+  const breakColor = since >= 300 ? "var(--critical)" : since >= 240 ? "var(--warning)" : "var(--good)";
+  const breakWord = since >= 300 ? "Over 5 hours without a break" : since >= 240 ? "A break is due soon" : "On track";
+  const toggle = (k: string) => setOpen(open === k ? null : k);
 
-      <Panel title="Relief">
-        {cur.relief_pending ? (
-          <p>
-            <strong>Relief requested.</strong> Your {recipientLabel(recipient).toLowerCase()} sees “Relief requested —{" "}
-            {me.display_name}” and nothing else. It disappears when they mark it handled.
-          </p>
-        ) : (
-          <div className="stack">
-            <label className="field">
-              Send to
-              <select value={recipient} onChange={(e) => setRecipient(e.target.value)}>
-                {RECIPIENTS.map(([k, label]) => (
-                  <option key={k} value={k}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button className="primary big" onClick={requestRelief}>
-              Request relief
-            </button>
-          </div>
-        )}
-      </Panel>
+  return (
+    <div>
+      <div className="row" style={{ marginBottom: 2 }}>
+        <Badge mode={shift.data_mode} note={shift.data_mode === "replay" ? "simulated" : undefined} />
+        <span className="muted">
+          {shift.shift_type === "day" ? "Day" : "Night"} shift · started {fmtTime(shift.start_ts)}
+        </span>
+      </div>
+      <h1>{hm(cur.elapsed_min)} in</h1>
+
+      <section className="panel hero-card" style={{ marginTop: 14 }}>
+        <Ring fraction={since / 300} color={breakColor}>
+          <strong style={{ fontSize: 22 }}>{since >= 60 ? `${Math.floor(since / 60)}h ${since % 60}m` : `${since}m`}</strong>
+          <span className="muted" style={{ fontSize: 11 }}>
+            no break
+          </span>
+        </Ring>
+        <div className="ring-text">
+          <div className="kicker muted">Since your last break</div>
+          <h2>{breakWord}</h2>
+        </div>
+      </section>
+
+      <Highlights cur={cur} startIso={shift.start_ts} />
+
+      {cur.relief_pending ? (
+        <div className="banner info">
+          <strong>Relief requested.</strong> Your {recipientLabel(me.relief_recipient).toLowerCase()} sees only “Relief requested — {me.display_name}”.
+        </div>
+      ) : (
+        <button className={`big ${cur.nudge ? "primary" : ""}`} style={{ marginBottom: 12 }} onClick={requestRelief}>
+          Request relief from your {recipientLabel(me.relief_recipient).toLowerCase()}
+        </button>
+      )}
+
+      <button className="metric" onClick={() => toggle("load")}>
+        <div className="kicker">
+          <span className="icon" style={{ background: "var(--series-1)" }} />
+          Physical load
+          <span className="more">{open === "load" ? "Hide" : "Show chart"}</span>
+        </div>
+        <div className="value">
+          {m.mean_pct_hrr === null ? "—" : m.mean_pct_hrr.toFixed(0)}
+          <small>% effort</small>
+        </div>
+        <div className="caption">
+          <BandChip band={cur.phys_band_so_far} label={LOAD_WORD[cur.phys_band_so_far]} />
+        </div>
+      </button>
+      {open === "load" && (
+        <Panel>
+          <LiveChart windows={cur.windows} breaks={cur.suggested_breaks} startIso={shift.start_ts} elapsed={cur.elapsed_min} />
+        </Panel>
+      )}
+
+      <div className="metric">
+        <div className="kicker">
+          <span className="icon" style={{ background: "var(--series-2)" }} />
+          Stress
+        </div>
+        <div className="value">
+          {m.unexplained_hr_min}
+          <small>min of high heart rate while still</small>
+        </div>
+      </div>
+
+      <div className="metric">
+        <div className="kicker">
+          <span className="icon" style={{ background: "var(--nodata)" }} />
+          Recording
+        </div>
+        <div className="value">
+          {m.coverage_pct.toFixed(0)}
+          <small>% recorded</small>
+        </div>
+        <div className="bar-track">
+          <div style={{ width: `${m.coverage_pct}%`, background: m.coverage_pct < 70 ? "var(--warning)" : "var(--series-1)" }} />
+        </div>
+      </div>
 
       <ErrorLine error={error} />
       <button
@@ -369,17 +387,19 @@ function ShiftTab({ me }: { me: Me }) {
         disabled={cur.replay_running}
         onClick={() => nurseApi<Proposal>(`/shifts/${shift.shift_id}/propose`, {}).then(setProposal, (e) => setError(e.message))}
       >
-        {cur.replay_running ? "Replay still running…" : "End shift"}
+        {cur.replay_running ? "Playing the recorded day…" : "End shift"}
       </button>
-    </>
+    </div>
   );
 }
 
-function EndPrompt({ shiftId, proposal, cancel, done }: { shiftId: string; proposal: Proposal; cancel: () => void; done: (c: Card) => void }) {
+// One question per screen.
+function EndFlow({ shiftId, proposal, cancel, done }: { shiftId: string; proposal: Proposal; cancel: () => void; done: (c: Card) => void }) {
+  const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, "confirmed" | "rejected">>(() =>
     Object.fromEntries(proposal.breaks.map((b) => [b.id, "confirmed" as const])),
   );
-  const [ratio, setRatio] = useState("unknown");
+  const [ratio, setRatio] = useState<string | null>(null);
   const [drained, setDrained] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -387,125 +407,154 @@ function EndPrompt({ shiftId, proposal, cancel, done }: { shiftId: string; propo
     nurseApi<Card>(`/shifts/${shiftId}/end`, {
       breaks: skipped ? [] : Object.entries(answers).map(([id, status]) => ({ id, status })),
       skipped,
-      ratio_status: ratio,
+      ratio_status: ratio ?? "unknown",
       drained_rating: drained,
     }).then(done, (e) => setError(e.message));
 
   return (
-    <Panel title="End of shift">
-      <div className="stack">
-        <h3>
-          {proposal.breaks.length
-            ? `We think you had breaks at ${proposal.breaks.map((b) => fmtTime(b.start_ts)).join(" and ")} — correct?`
-            : "We did not see any breaks. Time with the watch off is never counted as a break."}
-        </h3>
-        {proposal.breaks.map((b) => (
-          <div className="row" key={b.id}>
-            <span style={{ flex: 1 }}>
-              {fmtTime(b.start_ts)}–{fmtTime(b.end_ts)}
-            </span>
-            {(["confirmed", "rejected"] as const).map((s) => (
-              <button key={s} className={answers[b.id] === s ? "pressed" : ""} onClick={() => setAnswers({ ...answers, [b.id]: s })}>
-                {s === "confirmed" ? "Yes, a break" : "Not a break"}
+    <div className="fade-in" key={step}>
+      <div className="dots" style={{ marginTop: 12 }}>
+        {[0, 1, 2].map((i) => (
+          <span key={i} className={i === step ? "on" : ""} />
+        ))}
+      </div>
+      {step === 0 && (
+        <div className="stack">
+          <h1>{proposal.breaks.length ? "Were these your breaks?" : "We didn’t see any breaks"}</h1>
+          {proposal.breaks.map((b) => (
+            <Panel key={b.id}>
+              <div className="row">
+                <strong style={{ flex: 1, fontSize: 19 }}>
+                  {fmtTime(b.start_ts)} – {fmtTime(b.end_ts)}
+                </strong>
+                {(["confirmed", "rejected"] as const).map((s) => (
+                  <button key={s} className={answers[b.id] === s ? "pressed" : ""} onClick={() => setAnswers({ ...answers, [b.id]: s })}>
+                    {s === "confirmed" ? "Yes" : "No"}
+                  </button>
+                ))}
+              </div>
+            </Panel>
+          ))}
+          <button className="primary big" onClick={() => setStep(1)}>
+            Continue
+          </button>
+          <div className="row" style={{ justifyContent: "space-between" }}>
+            <button className="link" onClick={cancel}>
+              Back to shift
+            </button>
+            <button className="link" onClick={() => submit(true)}>
+              Skip all questions
+            </button>
+          </div>
+        </div>
+      )}
+      {step === 1 && (
+        <div className="stack">
+          <h1>Was the nurse-to-patient ratio met?</h1>
+          <div className="choice">
+            {[
+              ["met", "Yes, it was met"],
+              ["not_met", "No, it was not met"],
+              ["unknown", "I don’t know"],
+            ].map(([k, label]) => (
+              <button
+                key={k}
+                className={ratio === k ? "pressed" : ""}
+                onClick={() => {
+                  setRatio(k);
+                  setStep(2);
+                }}
+              >
+                {label}
               </button>
             ))}
           </div>
-        ))}
-        <h3>Was the nurse-to-patient ratio met?</h3>
-        <div className="row">
-          {[
-            ["met", "Met"],
-            ["not_met", "Not met"],
-            ["unknown", "Don’t know"],
-          ].map(([k, label]) => (
-            <button key={k} className={ratio === k ? "pressed" : ""} onClick={() => setRatio(k)}>
-              {label}
-            </button>
-          ))}
-        </div>
-        <h3>How drained do you feel? (optional)</h3>
-        <div className="row">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-            <button key={n} className={drained === n ? "pressed" : ""} style={{ padding: "6px 10px" }} onClick={() => setDrained(drained === n ? null : n)}>
-              {n}
-            </button>
-          ))}
-        </div>
-        <p className="muted">The rating is used to check the bands against how shifts feel. It never changes your band.</p>
-        <ErrorLine error={error} />
-        <button className="primary big" onClick={() => submit(false)}>
-          Finish shift
-        </button>
-        <div className="row">
-          <button className="link" onClick={() => submit(true)}>
-            Skip the break questions
-          </button>
-          <span className="spacer" style={{ flex: 1 }} />
-          <button className="link" onClick={cancel}>
-            Back to shift
+          <button className="link" onClick={() => setStep(0)}>
+            Back
           </button>
         </div>
-      </div>
-    </Panel>
+      )}
+      {step === 2 && (
+        <div className="stack">
+          <h1>How drained do you feel?</h1>
+          <p className="sub">1 = fine · 10 = completely drained</p>
+          <div className="scale">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+              <button key={n} className={drained === n ? "pressed" : ""} onClick={() => setDrained(drained === n ? null : n)}>
+                {n}
+              </button>
+            ))}
+          </div>
+          <ErrorLine error={error} />
+          <button className="primary big" onClick={() => submit(false)}>
+            Finish shift
+          </button>
+          <button className="link" onClick={() => setStep(1)}>
+            Back
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
 function ShiftCard({ card }: { card: Card }) {
+  const [title, text] = SHIFT_WORD[card.band] ?? SHIFT_WORD.insufficient;
+  const reasons: string[] = [];
+  if (card.recovery_band === "red") reasons.push(`you went ${hm(card.longest_no_break_min)} without a break`);
+  if (card.phys_band === "red") reasons.push("physical load was very heavy");
+  if (card.band === "amber" && card.recovery_band === "amber") reasons.push(`your longest stretch without a break was ${hm(card.longest_no_break_min)}`);
+  if (card.band === "amber" && card.phys_band === "amber") reasons.push("physical load was heavy");
   return (
-    <>
-      <Panel
-        title={`${fmtDay(card.start_ts)} · ${fmtTime(card.start_ts)}–${fmtTime(card.end_ts)}`}
-        mode={card.data_mode}
-        modeNote={card.data_mode === "replay" ? "simulated recording" : undefined}
-      >
-        <div className="row" style={{ marginBottom: 12 }}>
-          <BandChip band={card.band} big />
-          <span className="sub">shift band = the worse of the two below</span>
+    <div className="fade-in">
+      <Panel>
+        <div className="result">
+          <div className="big-dot" style={{ background: BAND_COLOR[card.band] ?? BAND_COLOR.insufficient }} />
+          <h2>{title}</h2>
+          <p className="sub" style={{ marginTop: 6 }}>
+            {reasons.length ? `Why: ${reasons.join(" and ")}.` : text}
+          </p>
+          <p className="sub">
+            {fmtDay(card.start_ts)} · {fmtTime(card.start_ts)}–{fmtTime(card.end_ts)}{" "}
+            <Badge mode={card.data_mode} note={card.data_mode === "replay" ? "simulated" : undefined} />
+          </p>
         </div>
-        <table>
-          <tbody>
-            <tr>
-              <th>Physical load</th>
-              <td>
-                <BandChip band={card.phys_band} />
-              </td>
-              <td>
-                mean {card.mean_pct_hrr === null ? "—" : `${card.mean_pct_hrr}%`} of heart-rate reserve ·{" "}
-                {card.min_above_30_hrr} min at 30% or more
-              </td>
-            </tr>
-            <tr>
-              <th>Recovery opportunity</th>
-              <td>
-                <BandChip band={card.recovery_band} />
-              </td>
-              <td>
-                longest stretch without a break {hm(card.longest_no_break_min)} ·{" "}
-                {card.breaks_uncertain ? "breaks not confirmed" : `${card.n_breaks_confirmed} breaks confirmed`}
-                {card.recovery_provisional ? " · amber threshold provisional" : ""}
-              </td>
-            </tr>
-            <tr>
-              <th>Coverage</th>
-              <td colSpan={2}>
-                {card.coverage_pct}% of the shift recorded · longest gap {card.max_gap_min} min
-              </td>
-            </tr>
-            <tr>
-              <th>Context</th>
-              <td colSpan={2}>
-                {card.time_on_feet_min} min on feet · {card.unexplained_hr_min} min on the stress indicator (does not set
-                the band)
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p className="muted" style={{ marginTop: 10 }}>
-          Raw heart-rate and step data for this shift has been deleted. Only this card is kept.
-        </p>
       </Panel>
+      <div className="list">
+        <div>
+          <span className="grow">
+            <strong>Breaks</strong>
+            <div className="sub">
+              Longest stretch without one: {hm(card.longest_no_break_min)} ·{" "}
+              {card.breaks_uncertain ? "not confirmed" : `${card.n_breaks_confirmed} confirmed`}
+            </div>
+          </span>
+          <BandChip band={card.recovery_band} />
+        </div>
+        <div>
+          <span className="grow">
+            <strong>Physical load</strong>
+            <div className="sub">Average effort {card.mean_pct_hrr === null ? "—" : `${card.mean_pct_hrr}%`}</div>
+          </span>
+          <BandChip band={card.phys_band} />
+        </div>
+        <div>
+          <span className="grow">
+            <strong>Stress</strong>
+            <div className="sub">{card.unexplained_hr_min} min of high heart rate while still</div>
+          </span>
+        </div>
+        <div>
+          <span className="grow">
+            <strong>Recording</strong>
+            <div className="sub">
+              {card.coverage_pct}% of the shift · longest gap {card.max_gap_min} min
+            </div>
+          </span>
+        </div>
+      </div>
       {card.band === "red" && <ReportDraft shiftId={card.shift_id} />}
-    </>
+    </div>
   );
 }
 
@@ -519,11 +568,8 @@ function ReportDraft({ shiftId }: { shiftId: string }) {
   }, [shiftId]);
   if (!text) return <ErrorLine error={error} />;
   return (
-    <Panel title="Workload report draft">
-      <p className="sub">
-        This shift was red. Below is a record you can attach to a Professional Responsibility Process form. Nothing
-        is sent in your name — you decide.
-      </p>
+    <More title="Workload report you can send">
+      <p className="sub">Attach this to a workload report. Nothing is sent for you.</p>
       <pre className="report">{text}</pre>
       <div className="row">
         <button
@@ -534,19 +580,45 @@ function ReportDraft({ shiftId }: { shiftId: string }) {
         >
           {copied ? "Copied" : "Copy text"}
         </button>
-        <button
-          className="primary"
-          disabled={sent}
-          onClick={() => nurseApi(`/me/reports/${shiftId}/sent`, {}).then(() => setSent(true), (e) => setError(e.message))}
-        >
+        <button className="primary" disabled={sent} onClick={() => nurseApi(`/me/reports/${shiftId}/sent`, {}).then(() => setSent(true), (e) => setError(e.message))}>
           {sent ? "Counted — thank you" : "I sent this report"}
         </button>
       </div>
-      <p className="muted" style={{ marginTop: 8 }}>
-        “I sent this report” adds one to your unit’s weekly count of reports. It is not linked to you.
-      </p>
       <ErrorLine error={error} />
-    </Panel>
+    </More>
+  );
+}
+
+// One or two big plain sentences about what stood out, with the time it happened.
+function Highlights({ cur, startIso }: { cur: Current; startIso: string }) {
+  const at = (min: number) => fmtTime(new Date(new Date(startIso).getTime() + min * 60000).toISOString());
+  const longest = (pred: (w: Win) => boolean) => {
+    let best: [number, number] | null = null;
+    let run: [number, number] | null = null;
+    for (const w of cur.windows) {
+      if (pred(w)) {
+        run = run ? [run[0], w.t + 5] : [w.t, w.t + 5];
+        if (!best || run[1] - run[0] > best[1] - best[0]) best = run;
+      } else run = null;
+    }
+    return best;
+  };
+  const lines: { color: string; text: string }[] = [];
+  const heavy = longest((w) => (w.pct_hrr ?? 0) >= 30);
+  if (heavy && heavy[1] - heavy[0] >= 10) lines.push({ color: "var(--series-1)", text: `Your heart was working hard at ${at(heavy[0])}` });
+  const stress = longest((w) => !!w.unexplained);
+  if (stress) lines.push({ color: "var(--series-2)", text: `Stress was high at ${at(stress[0])}` });
+  if (cur.since_break_min >= 300) lines.push({ color: "var(--critical)", text: `No break for ${hm(cur.since_break_min)}` });
+  if (!lines.length) return null;
+  return (
+    <section className="panel insights">
+      {lines.map((l) => (
+        <div key={l.text} className="insight">
+          <span className="icon" style={{ background: l.color }} />
+          {l.text}
+        </div>
+      ))}
+    </section>
   );
 }
 
@@ -555,38 +627,50 @@ function ReportDraft({ shiftId }: { shiftId: string }) {
 function History() {
   const [shifts, setShifts] = useState<Card[] | null>(null);
   const [redOnly, setRedOnly] = useState(false);
-  const [open, setOpen] = useState<string | null>(null);
+  const [openCard, setOpenCard] = useState<Card | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     nurseApi<Card[]>("/me/shifts").then(setShifts, (e) => setError(e.message));
   }, []);
   if (!shifts) return <ErrorLine error={error} />;
+  if (openCard)
+    return (
+      <div>
+        <button className="link" onClick={() => setOpenCard(null)} style={{ marginBottom: 10 }}>
+          ‹ History
+        </button>
+        <ShiftCard card={openCard} />
+      </div>
+    );
   const shown = redOnly ? shifts.filter((s) => s.band === "red") : shifts;
   return (
-    <>
-      <div className="row" style={{ marginBottom: 12 }}>
-        <button className={redOnly ? "" : "pressed"} onClick={() => setRedOnly(false)}>
+    <div className="fade-in">
+      <h1>History</h1>
+      <div className="pills" style={{ margin: "12px 0" }}>
+        <button className={redOnly ? "" : "on"} onClick={() => setRedOnly(false)}>
           All shifts ({shifts.length})
         </button>
-        <button className={redOnly ? "pressed" : ""} onClick={() => setRedOnly(true)}>
+        <button className={redOnly ? "on" : ""} onClick={() => setRedOnly(true)}>
           Red shifts ({shifts.filter((s) => s.band === "red").length})
         </button>
       </div>
-      {shown.length === 0 && <p className="sub">No shifts here yet.</p>}
-      {shown.map((s) =>
-        open === s.shift_id ? (
-          <ShiftCard key={s.shift_id} card={s} />
-        ) : (
-          <button key={s.shift_id} className="relief-item" style={{ width: "100%", textAlign: "left" }} onClick={() => setOpen(s.shift_id)}>
-            <span style={{ flex: 1 }}>
-              {fmtDay(s.start_ts)} · {s.shift_type}
-            </span>
-            <BandChip band={s.band} />
-          </button>
-        ),
+      {shown.length === 0 ? (
+        <p className="sub">No shifts here yet.</p>
+      ) : (
+        <div className="list">
+          {shown.map((s) => (
+            <button key={s.shift_id} onClick={() => setOpenCard(s)}>
+              <span className="grow">
+                <strong>{fmtDay(s.start_ts)}</strong>
+                <div className="sub">{s.shift_type === "day" ? "Day shift" : "Night shift"}</div>
+              </span>
+              <BandChip band={s.band} />
+              <span className="chev">›</span>
+            </button>
+          ))}
+        </div>
       )}
-      <p className="muted">A finished shift cannot be deleted on its own. You can pause recording or withdraw in Settings.</p>
-    </>
+    </div>
   );
 }
 
@@ -596,39 +680,55 @@ function Settings({ me, reload }: { me: Me; reload: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const save = (body: object) => nurseApi("/me/settings", body).then(reload, (e) => setError(e.message));
-  const paused = me.paused_until && new Date(me.paused_until) > new Date();
+  const paused = !!me.paused_until && new Date(me.paused_until) > new Date();
   return (
-    <>
+    <div className="fade-in">
+      <h1>Settings</h1>
+      <p className="sub" style={{ marginBottom: 16 }}>
+        {me.display_name} · {me.unit_name}
+      </p>
       <Panel title="Relief requests">
         <div className="stack">
-          <label className="field">
-            Default recipient
-            <select value={me.relief_recipient} onChange={(e) => save({ relief_recipient: e.target.value })}>
-              {RECIPIENTS.map(([k, label]) => (
-                <option key={k} value={k}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="pills">
+            {RECIPIENTS.map(([k, label]) => (
+              <button key={k} className={me.relief_recipient === k ? "on" : ""} style={{ background: me.relief_recipient === k ? undefined : "var(--wash)" }} onClick={() => save({ relief_recipient: k })}>
+                {label}
+              </button>
+            ))}
+          </div>
           <label className="row">
             <input type="checkbox" checked={me.auto_relief} onChange={(e) => save({ auto_relief: e.target.checked })} />
-            <span>Send a relief request automatically after five hours without a break</span>
+            <span>Ask for relief automatically after 5 hours without a break</span>
           </label>
         </div>
       </Panel>
-      <Panel title="Pause recording">
-        <p className="sub">
-          {paused ? `Paused until ${fmtDay(me.paused_until!)}.` : "Recording is on. Pause before a shift if you don’t want it recorded."}
-        </p>
+      <Panel title="Recording">
+        <p className="sub">{paused ? `Paused until ${fmtDay(me.paused_until!)}.` : "Recording is on."}</p>
         <div className="row">
-          <button onClick={() => save({ pause_days: 1 })}>Pause 1 day</button>
-          <button onClick={() => save({ pause_days: 7 })}>Pause 7 days</button>
-          {paused && <button onClick={() => save({ pause_days: 0 })}>Resume</button>}
+          {paused ? (
+            <button onClick={() => save({ pause_days: 0 })}>Resume</button>
+          ) : (
+            <>
+              <button onClick={() => save({ pause_days: 1 })}>Pause 1 day</button>
+              <button onClick={() => save({ pause_days: 7 })}>Pause 7 days</button>
+            </>
+          )}
         </div>
       </Panel>
-      <Panel title="Withdraw">
-        <p className="sub">Deletes every shift and setting held about you. This cannot be undone.</p>
+      <More title="What happens to my data">
+        <ul className="stack" style={{ paddingLeft: 18, margin: 0 }}>
+          <li>A trustee holds the data — not the hospital.</li>
+          <li>Managers see weekly unit totals only, for groups of five or more, rounded and with noise added.</li>
+          <li>Raw heart-rate and step data is deleted when a shift ends.</li>
+          <li>Missing data is never shown as green. Watch-off time never counts as a break.</li>
+          <li>A relief request shows only your name, to the person you choose, and is deleted when handled.</li>
+          <li>Every manager and committee query is logged for the joint committee.</li>
+          <li>No AI model sees your data.</li>
+          <li>{me.purpose_limit}</li>
+        </ul>
+      </More>
+      <More title="Withdraw">
+        <p className="sub">Deletes every shift and setting held about you. This can’t be undone.</p>
         {confirming ? (
           <div className="row">
             <button className="danger" onClick={() => nurseApi("/me/withdraw", {}).then(reload, (e) => setError(e.message))}>
@@ -641,25 +741,8 @@ function Settings({ me, reload }: { me: Me; reload: () => void }) {
             Withdraw and delete my data
           </button>
         )}
-      </Panel>
+      </More>
       <ErrorLine error={error} />
-    </>
-  );
-}
-
-function Privacy({ me }: { me: Me }) {
-  return (
-    <Panel title="What happens to your data">
-      <ul className="stack" style={{ paddingLeft: 18, margin: 0 }}>
-        <li>A trustee holds the database — not the health authority. The hospital has no login to it.</li>
-        <li>Managers see weekly unit totals only, from groups of five or more nurses, rounded and with noise added. Never names, never single shifts, never daily data.</li>
-        <li>Raw heart-rate and step data is deleted when a shift is finalized. Only the shift card is kept.</li>
-        <li>Missing data is never shown as green, and time with the watch off never counts as a break.</li>
-        <li>A relief request shows only your name to the person you choose, and is deleted when handled.</li>
-        <li>Every manager and committee query is written to an access log the joint committee can read.</li>
-        <li>No AI model sees your data. Your screens are written from templates.</li>
-        <li>{me.purpose_limit}</li>
-      </ul>
-    </Panel>
+    </div>
   );
 }

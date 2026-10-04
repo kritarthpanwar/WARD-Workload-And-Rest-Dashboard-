@@ -23,13 +23,9 @@ export default function TrusteePage() {
   return (
     <main className="narrow">
       <h1>Trustee</h1>
-      <p className="sub">The trustee holds the database. This job is the only thing that writes what managers can read.</p>
+      <p className="sub">Publishes the weekly numbers managers can see.</p>
       <Panel title="Weekly release">
         <div className="stack">
-          <p className="sub">
-            Weekly aggregates → groups under five and small membership changes suppressed → proportions rounded to
-            10%, counts noised → anomaly flags → weekly reports.
-          </p>
           <button
             className="primary big"
             disabled={busy}
@@ -66,7 +62,6 @@ export default function TrusteePage() {
               </tbody>
             </table>
           )}
-          <p className="muted">Counts are for the default participation setting. Noise is fixed per cell, so running the job again gives the same published numbers.</p>
         </div>
       </Panel>
     </main>

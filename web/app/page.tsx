@@ -1,51 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Icon } from "@/components/ui";
 import { Role, saveSession } from "@/lib/api";
 
-const ROLES: { role: Role; uid: string; href: string; title: string; text: string }[] = [
-  {
-    role: "nurse",
-    uid: "demo-nurse",
-    href: "/nurse",
-    title: "Nurse — Alex R.",
-    text: "Own live card, end-of-shift card, relief request, red-shift history, report draft.",
-  },
-  {
-    role: "nurse",
-    uid: "demo-nurse-2",
-    href: "/nurse",
-    title: "Nurse — Sam K.",
-    text: "A second nurse login, for trying relief requests from two people.",
-  },
-  {
-    role: "charge_nurse",
-    uid: "demo-charge",
-    href: "/relief",
-    title: "Relief recipient",
-    text: "Sees “Relief requested — name” and nothing else. Gone when handled.",
-  },
-  {
-    role: "manager",
-    uid: "demo-manager",
-    href: "/manager",
-    title: "Manager",
-    text: "Weekly published release only: heatmap, flags, summary, comparisons, action log.",
-  },
-  {
-    role: "joint_committee",
-    uid: "demo-committee",
-    href: "/committee",
-    title: "Joint committee",
-    text: "Weekly report, reporting gap, relief counts and the access log.",
-  },
-  {
-    role: "admin",
-    uid: "demo-trustee",
-    href: "/trustee",
-    title: "Trustee admin",
-    text: "Runs the weekly release job that fills the published tables.",
-  },
+const ROLES: { role: Role; uid: string; href: string; icon: string; title: string; text: string }[] = [
+  { role: "nurse", uid: "demo-nurse", href: "/nurse", icon: "heart", title: "Nurse", text: "Alex R. — my shift, my breaks, my history" },
+  { role: "nurse", uid: "demo-nurse-2", href: "/nurse", icon: "heart", title: "Second nurse", text: "Sam K. — for trying relief requests" },
+  { role: "charge_nurse", uid: "demo-charge", href: "/relief", icon: "hand", title: "Relief recipient", text: "Who is asking for relief right now" },
+  { role: "manager", uid: "demo-manager", href: "/manager", icon: "chart", title: "Manager", text: "How each unit’s week went" },
+  { role: "joint_committee", uid: "demo-committee", href: "/committee", icon: "people", title: "Joint committee", text: "Reporting gap and who looked at what" },
+  { role: "admin", uid: "demo-trustee", href: "/trustee", icon: "shield", title: "Trustee", text: "Publishes the weekly numbers" },
 ];
 
 export default function Home() {
@@ -53,13 +18,10 @@ export default function Home() {
   return (
     <main>
       <h1>ShiftLoad</h1>
-      <p className="sub" style={{ maxWidth: 720 }}>
-        Turns every opted-in nurse shift into an automatic, dated, unit-specific record of physical load and
-        recovery opportunity. It measures and documents workload. It does not diagnose anything.
+      <p className="sub" style={{ maxWidth: 620, marginBottom: 20 }}>
+        An automatic record of how heavy each nursing shift was and whether there was a chance to recover.
       </p>
-      <div className="banner info">
-        Development sign-in: pick a role. Real sign-in (Firebase Auth with role claims) is not connected yet.
-      </div>
+      <div className="section-title" style={{ marginTop: 0 }}>Who are you?</div>
       <div className="role-grid">
         {ROLES.map((r) => (
           <button
@@ -70,11 +32,19 @@ export default function Home() {
               router.push(r.href);
             }}
           >
-            <strong>{r.title}</strong>
-            <span>{r.text}</span>
+            <span className="avatar">
+              <Icon name={r.icon} />
+            </span>
+            <span>
+              <strong>{r.title}</strong>
+              <span>{r.text}</span>
+            </span>
           </button>
         ))}
       </div>
+      <p className="muted" style={{ marginTop: 18 }}>
+        Demo sign-in: tap a role. Real sign-in is not connected yet.
+      </p>
     </main>
   );
 }

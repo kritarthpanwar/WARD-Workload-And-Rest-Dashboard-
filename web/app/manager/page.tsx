@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BandChip, ErrorLine, Panel, useRole } from "@/components/ui";
+import { BandChip, ErrorLine, More, Panel, useRole } from "@/components/ui";
 import { Cell, STATUS_TEXT, WeeklyReport, redRange } from "@/components/WeeklyReport";
 import { addWeeks, fmtWeek, managerApi } from "@/lib/api";
 
@@ -15,22 +15,23 @@ export type Meta = {
 
 type Flag = { unit_id: string; week_start: string; shift_type: string; metric: string; direction: string; ratio_rounded: string; label: string };
 
-const HEAT_METRICS = [
-  { key: "pct_red_high", label: "Red-shift rate" },
-  { key: "pct_no_break_5h", label: "Shifts with 5 h without a break" },
-  { key: "pct_insufficient", label: "Shifts with unknown band" },
-  { key: "pct_ratio_met_and_breaks", label: "Ratio met and breaks taken" },
+const MEASURES = [
+  { key: "pct_red_high", label: "Red shifts", help: "Share of shifts rated overloaded", goodDown: true },
+  { key: "pct_no_break_5h", label: "5 hours, no break", help: "Share of shifts with 5+ hours without a break", goodDown: true },
+  { key: "pct_ratio_met_and_breaks", label: "Ratio met + breaks", help: "Share of shifts with ratio met and breaks taken", goodDown: false },
+  { key: "pct_insufficient", label: "Unknown", help: "Share of shifts with too little data to rate", goodDown: true },
 ] as const;
-type HeatKey = (typeof HEAT_METRICS)[number]["key"];
+type MeasureKey = (typeof MEASURES)[number]["key"];
 
-const HIDDEN_CODE: Record<string, string> = {
-  suppressed_k: "k<5",
-  suppressed_membership: "Δ<5",
-  not_representative: "part.",
-  quality_gate: "cov.",
+const HIDDEN_SHORT: Record<string, string> = {
+  suppressed_k: "Too few nurses",
+  suppressed_membership: "Group changed",
+  not_representative: "Low participation",
+  quality_gate: "Low coverage",
 };
 
 const step = (v: number) => (v <= 10 ? 1 : v <= 30 ? 2 : v <= 50 ? 3 : v <= 70 ? 4 : 5);
+const show = (c: Cell, m: MeasureKey) => (m === "pct_red_high" ? redRange(c) : `${c[m]}%`);
 
 export default function ManagerPage() {
   const session = useRole("manager");
@@ -38,8 +39,10 @@ export default function ManagerPage() {
   const [scenario, setScenario] = useState(60);
   const [cells, setCells] = useState<Cell[]>([]);
   const [flags, setFlags] = useState<Flag[]>([]);
-  const [metric, setMetric] = useState<HeatKey>("pct_red_high");
-  const [sel, setSel] = useState<{ unit: string; week: string } | null>(null);
+  const [measure, setMeasure] = useState<MeasureKey>("pct_red_high");
+  const [unit, setUnit] = useState("");
+  const [week, setWeek] = useState("");
+  const [allUnits, setAllUnits] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,7 +50,8 @@ export default function ManagerPage() {
     managerApi<Meta>("/meta").then((m) => {
       setMeta(m);
       setScenario(m.default_scenario);
-      if (m.units.length && m.weeks.length) setSel({ unit: m.units[0].unit_id, week: m.weeks[m.weeks.length - 1] });
+      setUnit(m.units[0]?.unit_id ?? "");
+      setWeek(m.weeks[m.weeks.length - 1] ?? "");
     }, (e) => setError(e.message));
   }, [session]);
 
@@ -62,86 +66,178 @@ export default function ManagerPage() {
     }, (e) => setError(e.message));
   }, [session, scenario]);
 
+  const byKey = useMemo(() => new Map(cells.map((c) => [`${c.unit_id}|${c.week_start}|${c.shift_type}`, c])), [cells]);
+
   if (!session) return <main />;
   if (!meta) return <main><ErrorLine error={error} /></main>;
   if (!meta.weeks.length)
     return (
       <main>
         <h1>Unit workload</h1>
-        <p className="sub">Nothing has been published yet. The trustee runs the weekly release.</p>
+        <p className="sub">Nothing has been published yet. The trustee publishes the weekly numbers.</p>
       </main>
     );
 
-  const unitName = (id: string) => meta.units.find((u) => u.unit_id === id)?.name ?? id;
+  const wi = meta.weeks.indexOf(week);
+  const unitName = meta.units.find((u) => u.unit_id === unit)?.name ?? unit;
+  const unitFlags = flags.filter((f) => f.unit_id === unit);
+  const weekFlags = unitFlags.filter((f) => f.week_start === week);
+  const m = MEASURES.find((x) => x.key === measure)!;
+
   return (
     <main>
-      <h1>Unit workload — weekly release</h1>
-      <p className="sub">
-        You see published weekly cells only: groups of five or more nurses, proportions rounded to 10%, counts with
-        noise added. No names, no single shifts, no daily data.
-      </p>
+      <div className="row">
+        <h1 style={{ flex: 1 }}>Unit workload</h1>
+        <span className="badge">SYNTHETIC DATA</span>
+      </div>
+      <p className="sub">Weekly totals. No names.</p>
       <ErrorLine error={error} />
 
-      <Panel title="Weekly heatmap" mode="synthetic">
-        <div className="row" style={{ marginBottom: 12 }}>
-          <label className="field" style={{ minWidth: 240 }}>
-            Measure
-            <select value={metric} onChange={(e) => setMetric(e.target.value as HeatKey)}>
-              {HEAT_METRICS.map((m) => (
-                <option key={m.key} value={m.key}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field" style={{ minWidth: 260 }}>
-            Participation: {scenario}% of each roster (demo only, synthetic cohort)
-            <input
-              type="range"
-              min={meta.scenarios[0]}
-              max={meta.scenarios[meta.scenarios.length - 1]}
-              step={10}
-              value={scenario}
-              onChange={(e) => setScenario(Number(e.target.value))}
-            />
-          </label>
+      <div className="row" style={{ margin: "16px 0 14px" }}>
+        <div className="pills" style={{ flex: 1 }}>
+          {meta.units.map((u) => (
+            <button key={u.unit_id} className={u.unit_id === unit ? "on" : ""} onClick={() => setUnit(u.unit_id)}>
+              {u.name}
+            </button>
+          ))}
         </div>
-        <Heatmap meta={meta} cells={cells} flags={flags} metric={metric} sel={sel} onSelect={setSel} />
+        <div className="stepper">
+          <button disabled={wi <= 0} onClick={() => setWeek(meta.weeks[wi - 1])} aria-label="Previous week">
+            ‹
+          </button>
+          <span>Week of {fmtWeek(week)}</span>
+          <button disabled={wi >= meta.weeks.length - 1} onClick={() => setWeek(meta.weeks[wi + 1])} aria-label="Next week">
+            ›
+          </button>
+        </div>
+      </div>
+
+      <Panel>
+        <WeeklyReport unit={unit} week={week} scenario={scenario} />
+        {weekFlags.length > 0 && (
+          <div className="stack" style={{ marginTop: 12 }}>
+            {weekFlags.map((f) => (
+              <div key={f.shift_type + f.metric} className="row">
+                <span className="legend" style={{ margin: 0 }}>
+                  <span className="flagdot" />
+                </span>
+                <span>
+                  <strong>Unusual on {f.shift_type === "day" ? "days" : "nights"}:</strong> {f.label} — {f.ratio_rounded}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </Panel>
 
-      {sel && (
-        <div className="grid-2">
-          <Panel title={`Weekly summary — ${unitName(sel.unit)}`} mode="synthetic">
-            <WeeklyReport unit={sel.unit} week={sel.week} scenario={scenario} full />
-          </Panel>
-          <Panel title={`Flags — ${unitName(sel.unit)}`} mode="synthetic">
-            <FlagList flags={flags.filter((f) => f.unit_id === sel.unit)} />
-          </Panel>
-        </div>
-      )}
-
-      {sel && <Compare meta={meta} unit={sel.unit} scenario={scenario} />}
-
-      <div className="grid-2">
-        {sel && <Actions meta={meta} unit={sel.unit} week={sel.week} />}
-        <Guardrail />
+      <div className="grid-4">
+        {MEASURES.map((ms) => (
+          <button key={ms.key} className={`metric ${measure === ms.key ? "on" : ""}`} onClick={() => setMeasure(ms.key)} title={ms.help}>
+            <div className="kicker">{ms.label}</div>
+            {(["day", "night"] as const).map((s) => {
+              const c = byKey.get(`${unit}|${week}|${s}`);
+              const p = byKey.get(`${unit}|${addWeeks(week, -1)}|${s}`);
+              const ok = c?.status === "released";
+              const delta = ok && p?.status === "released" ? (c[ms.key] as number) - (p[ms.key] as number) : null;
+              return (
+                <div key={s} style={{ marginTop: 8 }}>
+                  <div className="muted">{s === "day" ? "Days" : "Nights"}</div>
+                  <div className="value" style={{ fontSize: ok ? 26 : 16, color: ok ? undefined : "var(--muted)" }}>
+                    {ok ? show(c, ms.key) : c ? HIDDEN_SHORT[c.status] : "No shifts"}
+                  </div>
+                  {delta !== null && delta !== 0 && (
+                    <div className="muted">
+                      <span className={delta > 0 ? "arrow-up" : "arrow-down"}>{Math.abs(delta)} points</span> vs last week
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </button>
+        ))}
       </div>
+
+      <div className="section-title">{m.label} — last {meta.weeks.length} weeks</div>
+      <Panel>
+        <div className="pills" style={{ marginBottom: 12 }}>
+          <button className={allUnits ? "" : "on"} style={{ background: allUnits ? "var(--wash)" : undefined }} onClick={() => setAllUnits(false)}>
+            {unitName}
+          </button>
+          <button className={allUnits ? "on" : ""} style={{ background: allUnits ? undefined : "var(--wash)" }} onClick={() => setAllUnits(true)}>
+            All units
+          </button>
+        </div>
+        <Heatmap
+          meta={meta}
+          units={allUnits ? meta.units : meta.units.filter((u) => u.unit_id === unit)}
+          byKey={byKey}
+          flags={flags}
+          measure={measure}
+          sel={{ unit, week }}
+          onSelect={(u, w) => {
+            setUnit(u);
+            setWeek(w);
+          }}
+        />
+        <div className="legend">
+          <span>{m.help}:</span>
+          {["0–10%", "20–30%", "40–50%", "60–70%", "80–100%"].map((label, i) => (
+            <span key={label}>
+              <span className="sw" style={{ background: `var(--seq-${i + 1})` }} />
+              {label}
+            </span>
+          ))}
+          <span>
+            <span className="flagdot" />
+            unusual week
+          </span>
+        </div>
+      </Panel>
+      <More title="Why are some weeks striped?">
+        <p className="sub">They are held back to protect nurses, or the data is too thin.</p>
+        <ul style={{ margin: 0, paddingLeft: 18 }} className="stack">
+          <li><strong>Too few nurses</strong> — fewer than five contributed.</li>
+          <li><strong>Group changed</strong> — the group changed by one to four people since last week.</li>
+          <li><strong>Low participation</strong> — under 40% of the roster took part.</li>
+          <li><strong>Low coverage</strong> — under 50% of shift time was recorded.</li>
+        </ul>
+      </More>
+
+      <div className="section-title">Compare</div>
+      <Compare meta={meta} unit={unit} scenario={scenario} />
+
+      <div className="section-title">More</div>
+      <More title={`Unusual weeks for ${unitName} (${unitFlags.length})`}>
+        <FlagList flags={unitFlags} />
+      </More>
+      <More title="Log an action you took">
+        <Actions unit={unit} week={week} />
+      </More>
+      <More title="Demo: what if fewer nurses took part?">
+        <label className="field">
+          Participation: {scenario}% of each roster
+          <input type="range" min={meta.scenarios[0]} max={meta.scenarios[meta.scenarios.length - 1]} step={10} value={scenario} onChange={(e) => setScenario(Number(e.target.value))} />
+        </label>
+      </More>
+      <More title="How the written summary is kept honest">
+        <Guardrail />
+      </More>
     </main>
   );
 }
 
 // ---------------------------------------------------------------- heatmap
 
-function Heatmap({ meta, cells, flags, metric, sel, onSelect }: {
+function Heatmap({ meta, units, byKey, flags, measure, sel, onSelect }: {
   meta: Meta;
-  cells: Cell[];
+  units: Meta["units"];
+  byKey: Map<string, Cell>;
   flags: Flag[];
-  metric: HeatKey;
-  sel: { unit: string; week: string } | null;
-  onSelect: (s: { unit: string; week: string }) => void;
+  measure: MeasureKey;
+  sel: { unit: string; week: string };
+  onSelect: (unit: string, week: string) => void;
 }) {
-  const [tip, setTip] = useState<{ x: number; y: number; unit: string; week: string; shift: string } | null>(null);
-  const byKey = useMemo(() => new Map(cells.map((c) => [`${c.unit_id}|${c.week_start}|${c.shift_type}`, c])), [cells]);
+  const [tip, setTip] = useState<{ x: number; y: number; key: string; title: string } | null>(null);
   const flagsBy = useMemo(() => {
     const m = new Map<string, Flag[]>();
     for (const f of flags) {
@@ -150,9 +246,7 @@ function Heatmap({ meta, cells, flags, metric, sel, onSelect }: {
     }
     return m;
   }, [flags]);
-  const metricLabel = HEAT_METRICS.find((m) => m.key === metric)!.label;
-  const tipCell = tip ? byKey.get(`${tip.unit}|${tip.week}|${tip.shift}`) : undefined;
-  const tipFlags = tip ? flagsBy.get(`${tip.unit}|${tip.week}|${tip.shift}`) ?? [] : [];
+  const tipCell = tip ? byKey.get(tip.key) : undefined;
 
   return (
     <>
@@ -160,7 +254,7 @@ function Heatmap({ meta, cells, flags, metric, sel, onSelect }: {
         <table className="heat">
           <thead>
             <tr>
-              <th />
+              {units.length > 1 && <th />}
               <th />
               {meta.weeks.map((w) => (
                 <th key={w} className="week">
@@ -170,107 +264,67 @@ function Heatmap({ meta, cells, flags, metric, sel, onSelect }: {
             </tr>
           </thead>
           <tbody>
-            {meta.units.map((u, ui) =>
-              (["day", "night"] as const).map((shift) => (
-                <tr key={u.unit_id + shift}>
-                  {shift === "day" && (
-                    <th className="unit" rowSpan={2} style={ui ? { borderTop: "8px solid transparent" } : undefined}>
-                      {u.name}
+            {units.map((u, ui) =>
+              (["day", "night"] as const).map((shift) => {
+                const pad = ui && shift === "day" ? { paddingTop: 10 } : undefined;
+                return (
+                  <tr key={u.unit_id + shift}>
+                    {units.length > 1 && shift === "day" && (
+                      <th className="unit" rowSpan={2} style={pad}>
+                        {u.name}
+                      </th>
+                    )}
+                    <th className="shift" style={pad}>
+                      {shift === "day" ? "Days" : "Nights"}
                     </th>
-                  )}
-                  <th className="shift" style={ui && shift === "day" ? { borderTop: "8px solid transparent" } : undefined}>
-                    {shift === "day" ? "Days" : "Nights"}
-                  </th>
-                  {meta.weeks.map((w) => {
-                    const key = `${u.unit_id}|${w}|${shift}`;
-                    const c = byKey.get(key);
-                    const flagged = flagsBy.has(key);
-                    const selected = sel?.unit === u.unit_id && sel?.week === w;
-                    const hover = {
-                      onMouseEnter: (e: React.MouseEvent) => setTip({ x: e.clientX, y: e.clientY, unit: u.unit_id, week: w, shift }),
-                      onMouseMove: (e: React.MouseEvent) => setTip({ x: e.clientX, y: e.clientY, unit: u.unit_id, week: w, shift }),
-                      onMouseLeave: () => setTip(null),
-                    };
-                    let cls = "cell hidden-cell";
-                    let text = "–";
-                    if (c && c.status === "released") {
-                      const v = c[metric] as number;
-                      cls = `cell s${step(v)}`;
-                      text = metric === "pct_red_high" ? redRange(c).replace("%", "") : String(v);
-                    } else if (c) {
-                      text = HIDDEN_CODE[c.status] ?? "–";
-                    }
-                    return (
-                      <td key={w} style={ui && shift === "day" ? { paddingTop: 8 } : undefined}>
-                        <button
-                          className={`${cls}${selected ? " selected" : ""}`}
-                          onClick={() => onSelect({ unit: u.unit_id, week: w })}
-                          aria-label={`${u.name}, ${shift}, week of ${fmtWeek(w)}`}
-                          {...hover}
-                        >
-                          {text}
-                          {flagged && <span className="flag" />}
-                        </button>
-                      </td>
-                    );
-                  })}
-                </tr>
-              )),
+                    {meta.weeks.map((w) => {
+                      const key = `${u.unit_id}|${w}|${shift}`;
+                      const c = byKey.get(key);
+                      const released = c?.status === "released";
+                      const selected = sel.unit === u.unit_id && sel.week === w;
+                      const title = `${u.name} · ${shift === "day" ? "days" : "nights"} · week of ${fmtWeek(w)}`;
+                      const move = (e: React.MouseEvent) => setTip({ x: e.clientX, y: e.clientY, key, title });
+                      return (
+                        <td key={w} style={pad}>
+                          <button
+                            className={`cell ${released ? `s${step(c[measure] as number)}` : "hidden-cell"}${selected ? " selected" : ""}`}
+                            onClick={() => onSelect(u.unit_id, w)}
+                            onMouseEnter={move}
+                            onMouseMove={move}
+                            onMouseLeave={() => setTip(null)}
+                            aria-label={title}
+                          >
+                            {released ? show(c, measure).replace("%", "") : ""}
+                            {flagsBy.has(key) && <span className="flag" />}
+                          </button>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              }),
             )}
           </tbody>
         </table>
       </div>
-      <div className="legend">
-        <span>{metricLabel}, % of shifts:</span>
-        {["0–10", "20–30", "40–50", "60–70", "80–100"].map((label, i) => (
-          <span key={label}>
-            <span className="sw" style={{ background: `var(--seq-${i + 1})` }} />
-            {label}
-          </span>
-        ))}
-        <span>
-          <span className="flagdot" />
-          unusual vs the previous 28 days
-        </span>
-      </div>
-      <div className="legend">
-        <span>
-          <b>k&lt;5</b> fewer than five nurses
-        </span>
-        <span>
-          <b>Δ&lt;5</b> nurse group changed by fewer than five since the last release
-        </span>
-        <span>
-          <b>part.</b> participation below 40%
-        </span>
-        <span>
-          <b>cov.</b> coverage below 50%
-        </span>
-        <span>
-          <b>–</b> no shifts
-        </span>
-      </div>
       {tip && (
         <div className="tooltip" style={{ left: Math.min(tip.x + 14, window.innerWidth - 280), top: tip.y + 14 }}>
-          <b>
-            {meta.units.find((u) => u.unit_id === tip.unit)?.name} · {tip.shift === "day" ? "days" : "nights"} · week of{" "}
-            {fmtWeek(tip.week)}
-          </b>
+          <b>{tip.title}</b>
           {!tipCell && <div>No shifts recorded.</div>}
           {tipCell && tipCell.status !== "released" && <div>{STATUS_TEXT[tipCell.status]}.</div>}
           {tipCell && tipCell.status === "released" && (
             <>
-              <div>Red-shift rate: {redRange(tipCell)}</div>
-              <div>Band unknown: {tipCell.pct_insufficient}%</div>
-              <div>5 h without a break: {tipCell.pct_no_break_5h}%</div>
-              <div>Ratio met and breaks taken: {tipCell.pct_ratio_met_and_breaks}%</div>
-              <div>Physical load band: {tipCell.phys_load_band}</div>
-              <div>
+              <div>Red shifts: {redRange(tipCell)}</div>
+              <div>5 hours, no break: {tipCell.pct_no_break_5h}%</div>
+              <div>Ratio met + breaks: {tipCell.pct_ratio_met_and_breaks}%</div>
+              <div>Unknown: {tipCell.pct_insufficient}%</div>
+              <div>Physical load: {tipCell.phys_load_band}</div>
+              <div className="muted">
                 Coverage {tipCell.coverage_pct}% · participation {tipCell.participation_pct}%
               </div>
             </>
           )}
-          {tipFlags.map((f) => (
+          {(flagsBy.get(tip.key) ?? []).map((f) => (
             <div key={f.metric}>
               ● {f.label}: {f.ratio_rounded}
             </div>
@@ -282,41 +336,31 @@ function Heatmap({ meta, cells, flags, metric, sel, onSelect }: {
 }
 
 function FlagList({ flags }: { flags: Flag[] }) {
-  if (!flags.length) return <p className="sub">No weekly flags for this unit.</p>;
+  if (!flags.length) return <p className="sub">Nothing unusual was flagged for this unit.</p>;
   return (
-    <div className="scroll-x">
+    <>
       <table>
-        <thead>
-          <tr>
-            <th>Week of</th>
-            <th>Shift</th>
-            <th>Measure</th>
-            <th>Compared with usual</th>
-          </tr>
-        </thead>
         <tbody>
           {flags.slice(0, 12).map((f) => (
             <tr key={f.week_start + f.shift_type + f.metric}>
-              <td>{fmtWeek(f.week_start)}</td>
-              <td>{f.shift_type === "day" ? "Days" : "Nights"}</td>
-              <td>{f.label}</td>
-              <td>
+              <td style={{ whiteSpace: "nowrap" }}>
+                {fmtWeek(f.week_start)} · {f.shift_type === "day" ? "days" : "nights"}
+              </td>
+              <td>{f.label[0].toUpperCase() + f.label.slice(1)}</td>
+              <td className="num">
                 <span className={`arrow-${f.direction}`}>{f.ratio_rounded}</span>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <p className="muted" style={{ marginTop: 8 }}>
-        A flag means a day in that week sat far from the unit’s previous 28 days. It says something is unusual, not why.
-      </p>
-    </div>
+    </>
   );
 }
 
 // ---------------------------------------------------------------- compare
 
-type Side = { values: Record<string, number | null>; phys_load_band: string | null; cells_expected: number; cells_released: number };
+type Side = { phys_load_band: string | null; cells_expected: number; cells_released: number };
 type CompareResult = {
   labels: [string, string];
   scope: string;
@@ -325,6 +369,16 @@ type CompareResult = {
   rows: { metric: string; label: string; a: number | null; b: number | null; delta: number | null; arrow: string | null }[];
   warnings: { code: string; text: string }[];
   interpretation: string;
+};
+
+const ROW_NAME: Record<string, string> = {
+  pct_red_low: "Red shifts (lower estimate)",
+  pct_red_high: "Red shifts (upper estimate)",
+  pct_insufficient: "Unknown",
+  pct_no_break_5h: "5 hours, no break",
+  pct_ratio_met_and_breaks: "Ratio met + breaks",
+  coverage_pct: "Recording coverage",
+  participation_pct: "Participation",
 };
 
 function Compare({ meta, unit, scenario }: { meta: Meta; unit: string; scenario: number }) {
@@ -343,26 +397,10 @@ function Compare({ meta, unit, scenario }: { meta: Meta; unit: string; scenario:
   }, [unit, scenario]);
 
   const presets: { key: string; label: string; body: object }[] = [
-    {
-      key: "week",
-      label: "This week vs last",
-      body: { compare_by: "period", units: [unit], period_a: { week_start: latest, n_weeks: 1 }, period_b: { week_start: addWeeks(latest, -1), n_weeks: 1 } },
-    },
-    {
-      key: "shift",
-      label: "Nights vs days",
-      body: { compare_by: "shift_type", units: [unit], period_a: { week_start: addWeeks(latest, -3), n_weeks: 4 } },
-    },
-    {
-      key: "month",
-      label: "This month vs last",
-      body: { compare_by: "period", units: [unit], period_a: { week_start: addWeeks(latest, -3), n_weeks: 4 }, period_b: { week_start: addWeeks(latest, -7), n_weeks: 4 } },
-    },
-    {
-      key: "unit",
-      label: `This unit vs ${meta.units.find((u) => u.unit_id === other)?.name ?? "another"}`,
-      body: { compare_by: "unit", units: [unit, other], period_a: { week_start: addWeeks(latest, -3), n_weeks: 4 } },
-    },
+    { key: "week", label: "This week vs last", body: { compare_by: "period", units: [unit], period_a: { week_start: latest, n_weeks: 1 }, period_b: { week_start: addWeeks(latest, -1), n_weeks: 1 } } },
+    { key: "shift", label: "Nights vs days", body: { compare_by: "shift_type", units: [unit], period_a: { week_start: addWeeks(latest, -3), n_weeks: 4 } } },
+    { key: "month", label: "This month vs last", body: { compare_by: "period", units: [unit], period_a: { week_start: addWeeks(latest, -3), n_weeks: 4 }, period_b: { week_start: addWeeks(latest, -7), n_weeks: 4 } } },
+    { key: "unit", label: `vs ${meta.units.find((u) => u.unit_id === other)?.name ?? "another unit"}`, body: { compare_by: "unit", units: [unit, other], period_a: { week_start: addWeeks(latest, -3), n_weeks: 4 } } },
   ];
 
   const run = (p: (typeof presets)[number]) => {
@@ -375,76 +413,72 @@ function Compare({ meta, unit, scenario }: { meta: Meta; unit: string; scenario:
   };
 
   return (
-    <Panel title={`Ask your unit — ${meta.units.find((u) => u.unit_id === unit)?.name}`} mode="synthetic">
-      <div className="row" style={{ marginBottom: 12 }}>
+    <Panel>
+      <div className="pills" style={{ marginBottom: 12 }}>
         {presets.map((p) => (
-          <button key={p.key} className={active === p.key ? "pressed" : ""} onClick={() => run(p)}>
+          <button key={p.key} className={active === p.key ? "on" : ""} style={{ background: active === p.key ? undefined : "var(--wash)" }} onClick={() => run(p)}>
             {p.label}
           </button>
         ))}
-        <label className="row sub">
-          other unit
-          <select value={other} onChange={(e) => setOther(e.target.value)}>
-            {others.map((u) => (
-              <option key={u.unit_id} value={u.unit_id}>
-                {u.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <select value={other} onChange={(e) => setOther(e.target.value)} aria-label="Unit to compare with" style={{ borderRadius: 99 }}>
+          {others.map((u) => (
+            <option key={u.unit_id} value={u.unit_id}>
+              {u.name}
+            </option>
+          ))}
+        </select>
       </div>
       <ErrorLine error={error} />
-      {!result && !error && <p className="sub">Pick a comparison. “Month” means four whole weeks. Comparisons read the published release only.</p>}
+      {!result && !error && <p className="sub">Pick a comparison. A “month” is four whole weeks.</p>}
       {result && (
-        <div className="stack">
+        <div className="fade-in" key={active}>
           <div className="muted">{result.scope}</div>
-          <h3 style={{ fontSize: 16 }}>{result.interpretation}</h3>
-          {result.warnings.map((w) => (
-            <div key={w.text} className="banner" style={{ marginBottom: 0 }}>
-              {w.text}
-            </div>
-          ))}
-          <div className="scroll-x">
-            <table>
-              <thead>
-                <tr>
-                  <th>Measure</th>
-                  <th className="num">A · {result.labels[0]}</th>
-                  <th className="num">B · {result.labels[1]}</th>
-                  <th className="num">A compared with B</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.rows.map((r) => (
-                  <tr key={r.metric}>
-                    <td>{r.label[0].toUpperCase() + r.label.slice(1)}</td>
-                    <td className="num">{r.a === null ? "—" : `${r.a}%`}</td>
-                    <td className="num">{r.b === null ? "—" : `${r.b}%`}</td>
-                    <td className="num">
-                      {r.delta === null ? "—" : <span className={`arrow-${r.arrow}`}>{r.delta === 0 ? "same" : `${Math.abs(r.delta)} ${Math.abs(r.delta) === 1 ? "point" : "points"}`}</span>}
-                    </td>
-                  </tr>
-                ))}
-                <tr>
-                  <td>Physical load band (most common)</td>
-                  <td className="num">{result.a.phys_load_band ? <BandChip band={result.a.phys_load_band} /> : "—"}</td>
-                  <td className="num">{result.b.phys_load_band ? <BandChip band={result.b.phys_load_band} /> : "—"}</td>
-                  <td />
-                </tr>
-                <tr>
-                  <td>Cells released</td>
-                  <td className="num">
-                    {result.a.cells_released} of {result.a.cells_expected}
-                  </td>
-                  <td className="num">
-                    {result.b.cells_released} of {result.b.cells_expected}
-                  </td>
-                  <td />
-                </tr>
-              </tbody>
-            </table>
+          <h3 style={{ fontSize: 18, margin: "4px 0 10px" }}>{result.interpretation}</h3>
+          <div className="row" style={{ fontSize: 14, marginBottom: 4 }}>
+            <span>
+              <span className="legend" style={{ display: "inline", margin: 0 }}>
+                <span className="sw" style={{ background: "var(--series-1)" }} />
+              </span>
+              <strong>A</strong> {result.labels[0]}
+            </span>
+            <span>
+              <span className="legend" style={{ display: "inline", margin: 0 }}>
+                <span className="sw" style={{ background: "var(--series-2)" }} />
+              </span>
+              <strong>B</strong> {result.labels[1]}
+            </span>
           </div>
-          <p className="muted">Each side is the average of its released unit-week cells. The sentence above is written by code and describes a difference, not a cause.</p>
+          {result.rows
+            .filter((r) => r.metric !== "participation_pct")
+            .map((r) => (
+              <div className="pair" key={r.metric}>
+                <div className="name">
+                  {ROW_NAME[r.metric] ?? r.label}
+                  {r.delta !== null && (
+                    <span className="delta">
+                      {r.delta === 0 ? "same" : `A is ${Math.abs(r.delta)} ${Math.abs(r.delta) === 1 ? "point" : "points"} ${r.delta > 0 ? "higher" : "lower"}`}
+                    </span>
+                  )}
+                </div>
+                {([["A", r.a, "var(--series-1)"], ["B", r.b, "var(--series-2)"]] as const).map(([name, v, color]) => (
+                  <div className="line" key={name}>
+                    <span className="who-label">{name}</span>
+                    <span className="track">{v !== null && <div className="fill" style={{ width: `${v}%`, background: color }} />}</span>
+                    <span className="val">{v === null ? "—" : `${v}%`}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          <div className="row" style={{ marginTop: 12 }}>
+            <span className="sub">Physical load:</span>
+            <strong>A</strong> {result.a.phys_load_band ? <BandChip band={result.a.phys_load_band} /> : "—"}
+            <strong>B</strong> {result.b.phys_load_band ? <BandChip band={result.b.phys_load_band} /> : "—"}
+          </div>
+          {result.warnings.map((w) => (
+            <p key={w.text} className="muted" style={{ marginTop: 8 }}>
+              ⚠ {w.text}
+            </p>
+          ))}
         </div>
       )}
     </Panel>
@@ -453,7 +487,7 @@ function Compare({ meta, unit, scenario }: { meta: Meta; unit: string; scenario:
 
 // ---------------------------------------------------------------- actions
 
-type ActionRow = { unit_id: string; week_start: string; action_type: string; note: string; created_at: string; label: string };
+type ActionRow = { week_start: string; note: string; created_at: string; label: string };
 
 const ACTION_TYPES = [
   ["float_for_breaks", "Float for breaks"],
@@ -462,7 +496,7 @@ const ACTION_TYPES = [
   ["none", "No action"],
 ];
 
-function Actions({ meta, unit, week }: { meta: Meta; unit: string; week: string }) {
+function Actions({ unit, week }: { unit: string; week: string }) {
   const [rows, setRows] = useState<ActionRow[]>([]);
   const [type, setType] = useState("float_for_breaks");
   const [note, setNote] = useState("");
@@ -472,106 +506,79 @@ function Actions({ meta, unit, week }: { meta: Meta; unit: string; week: string 
   }, [unit]);
   useEffect(load, [load]);
   return (
-    <Panel title={`Action log — ${meta.units.find((u) => u.unit_id === unit)?.name}`} mode="live">
-      <div className="stack">
-        <div className="row">
-          <span className="sub">For the week of {fmtWeek(week)}:</span>
-          <select value={type} onChange={(e) => setType(e.target.value)}>
-            {ACTION_TYPES.map(([k, label]) => (
-              <option key={k} value={k}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <input type="text" placeholder="Note (optional)" value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
-        <div>
-          <button
-            className="primary"
-            onClick={() =>
-              managerApi("/manager/actions", { unit_id: unit, week_start: week, action_type: type, note }).then(() => {
-                setNote("");
-                load();
-              }, (e) => setError(e.message))
-            }
-          >
-            Log action
+    <div className="stack">
+      <p className="sub">For the week of {fmtWeek(week)}</p>
+      <div className="pills">
+        {ACTION_TYPES.map(([k, label]) => (
+          <button key={k} className={type === k ? "on" : ""} style={{ background: type === k ? undefined : "var(--wash)" }} onClick={() => setType(k)}>
+            {label}
           </button>
-        </div>
-        <ErrorLine error={error} />
-        {rows.length === 0 ? (
-          <p className="sub">No actions logged for this unit.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Week of</th>
-                <th>Action</th>
-                <th>Note</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.created_at}>
-                  <td>{fmtWeek(r.week_start)}</td>
-                  <td>{r.label[0].toUpperCase() + r.label.slice(1)}</td>
-                  <td>{r.note}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        <p className="muted">The next weekly release reports what the no-break share did in the week after each action.</p>
+        ))}
       </div>
-    </Panel>
+      <div className="row">
+        <input type="text" placeholder="Note (optional)" value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} style={{ flex: 1, minWidth: 160 }} />
+        <button
+          className="primary"
+          onClick={() =>
+            managerApi("/manager/actions", { unit_id: unit, week_start: week, action_type: type, note }).then(() => {
+              setNote("");
+              load();
+            }, (e) => setError(e.message))
+          }
+        >
+          Log it
+        </button>
+      </div>
+      <ErrorLine error={error} />
+      {rows.length > 0 && (
+        <table>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.created_at}>
+                <td style={{ whiteSpace: "nowrap" }}>{fmtWeek(r.week_start)}</td>
+                <td>{r.label[0].toUpperCase() + r.label.slice(1)}</td>
+                <td>{r.note}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
   );
 }
 
 // -------------------------------------------------------------- guardrail
 
-type Demo = {
-  sent_to_model: object;
-  model_output: { headline: string };
-  rejection: string;
-  fallback: { headline: string; changes: string[] };
-};
+type Demo = { sent_to_model: object; model_output: { headline: string }; rejection: string; fallback: { headline: string; changes: string[] } };
 
 function Guardrail() {
   const [demo, setDemo] = useState<Demo | null>(null);
   const [error, setError] = useState<string | null>(null);
   return (
-    <Panel title="Summary guardrail">
-      <div className="stack">
-        <p className="sub">
-          The language model only receives placeholder keys, measure names and direction labels — never a number or
-          a name. Its output is rejected if it contains a digit, an unknown placeholder or causal wording.
-        </p>
-        <div>
-          <button onClick={() => managerApi<Demo>("/manager/validator-demo", {}).then(setDemo, (e) => setError(e.message))}>
-            Run the validator on a bad draft
-          </button>
-        </div>
-        <ErrorLine error={error} />
-        {demo && (
-          <>
-            <div>
-              <h3>What would be sent to the model</h3>
-              <pre className="report">{JSON.stringify(demo.sent_to_model, null, 1)}</pre>
-            </div>
-            <div>
-              <h3>A bad draft (canned example, not a live model call)</h3>
-              <pre className="report">{demo.model_output.headline}</pre>
-            </div>
-            <div className="banner bad" style={{ marginBottom: 0 }}>
-              <strong>Rejected:</strong> {demo.rejection}
-            </div>
-            <div>
-              <h3>Template used instead</h3>
-              <pre className="report">{[demo.fallback.headline, ...demo.fallback.changes].join("\n")}</pre>
-            </div>
-          </>
-        )}
+    <div className="stack">
+      <p className="sub">The AI never sees a number or a name. Bad drafts are thrown away.</p>
+      <div>
+        <button onClick={() => managerApi<Demo>("/manager/validator-demo", {}).then(setDemo, (e) => setError(e.message))}>Try it with a bad draft</button>
       </div>
-    </Panel>
+      <ErrorLine error={error} />
+      {demo && (
+        <div className="fade-in stack">
+          <div>
+            <h3>1. A bad draft (canned example)</h3>
+            <pre className="report">{demo.model_output.headline}</pre>
+          </div>
+          <div className="banner bad" style={{ boxShadow: "none", background: "var(--wash)" }}>
+            <strong>2. Rejected:</strong> {demo.rejection}
+          </div>
+          <div>
+            <h3>3. Template used instead</h3>
+            <pre className="report">{[demo.fallback.headline, ...demo.fallback.changes].join("\n")}</pre>
+          </div>
+          <More title="What the AI would have been sent">
+            <pre className="report">{JSON.stringify(demo.sent_to_model, null, 1)}</pre>
+          </More>
+        </div>
+      )}
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ErrorLine, Panel, useRole } from "@/components/ui";
+import { ErrorLine, More, Panel, useRole } from "@/components/ui";
 import { WeeklyReport } from "@/components/WeeklyReport";
 import { fmtWeek, managerApi } from "@/lib/api";
 import type { Meta } from "../manager/page";
@@ -51,42 +51,40 @@ export default function CommitteePage() {
 
   return (
     <main>
-      <h1>Joint committee</h1>
-      <p className="sub">For both sides of the committee: union and health authority. Unit-level only.</p>
-      <div className="row" style={{ margin: "12px 0 16px" }}>
-        <label className="field">
-          Unit
-          <select value={unit} onChange={(e) => setUnit(e.target.value)}>
-            {meta.units.map((u) => (
-              <option key={u.unit_id} value={u.unit_id}>
-                {u.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          Week of
-          <select value={week} onChange={(e) => setWeek(e.target.value)}>
-            {[...meta.weeks].reverse().map((w) => (
-              <option key={w} value={w}>
-                {fmtWeek(w)}
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="row">
+        <h1 style={{ flex: 1 }}>Joint committee</h1>
+        <span className="badge">SYNTHETIC DATA</span>
+      </div>
+      <p className="sub">Unit totals only.</p>
+      <div className="pills" style={{ margin: "16px 0 14px" }}>
+        {meta.units.map((u) => (
+          <button key={u.unit_id} className={u.unit_id === unit ? "on" : ""} onClick={() => setUnit(u.unit_id)}>
+            {u.name}
+          </button>
+        ))}
       </div>
       <ErrorLine error={error} />
 
-      <Panel title="Reporting gap" mode="synthetic">
+      <Panel>
         {gap && (
           <>
+            <div className="muted">Reporting gap</div>
             <div className="hero">
               About {gap.red_shifts_about} red shifts, about {gap.reports_sent_about} reported.
             </div>
             <p className="sub">
-              Over {gap.weeks.length} released weeks. About {gap.relief_requests_about} relief requests were handled
-              in the same period. Totals are rounded to the nearest 10 and the weekly counts carry added noise.
+              Over {gap.weeks.length} weeks · about {gap.relief_requests_about} relief requests
             </p>
+            <div className="bar-track" style={{ height: 14, marginBottom: 6 }} title="Share of red shifts that were reported">
+              <div style={{ width: `${Math.min(100, (100 * gap.reports_sent_about) / Math.max(1, gap.red_shifts_about))}%`, background: "var(--series-1)" }} />
+            </div>
+          </>
+        )}
+      </Panel>
+
+      <More title="Week by week">
+        {gap && (
+          <>
             <div className="scroll-x">
               <table>
                 <thead>
@@ -118,24 +116,34 @@ export default function CommitteePage() {
             </div>
           </>
         )}
-      </Panel>
+      </More>
 
+      <div className="section-title">Weekly report</div>
+      <div className="row" style={{ marginBottom: 12 }}>
+        <div className="stepper">
+          <button disabled={meta.weeks.indexOf(week) <= 0} onClick={() => setWeek(meta.weeks[meta.weeks.indexOf(week) - 1])} aria-label="Previous week">
+            ‹
+          </button>
+          <span>Week of {fmtWeek(week)}</span>
+          <button disabled={meta.weeks.indexOf(week) >= meta.weeks.length - 1} onClick={() => setWeek(meta.weeks[meta.weeks.indexOf(week) + 1])} aria-label="Next week">
+            ›
+          </button>
+        </div>
+      </div>
       {unit && week && (
-        <Panel title="Weekly report" mode="synthetic">
+        <Panel>
           <WeeklyReport unit={unit} week={week} scenario={meta.default_scenario} full />
         </Panel>
       )}
 
-      <Panel title="Access log" mode="live">
-        <div className="banner info">
-          <strong>Purpose limit.</strong> {meta.purpose_limit}
-        </div>
+      <div className="section-title">Who looked at what</div>
+      <div className="banner info">
+        <strong>Purpose limit.</strong> {meta.purpose_limit}
+      </div>
+      <More title={`Access log${log ? ` (${log.total} requests)` : ""}`}>
         {log && (
           <>
-            <p className="sub">
-              {log.total} requests recorded. The log is append-only: no service can change or delete a row. Showing
-              the latest {log.rows.length}.
-            </p>
+            <p className="sub">Nobody can change or delete a row. Showing the latest {log.rows.length}.</p>
             <div className="scroll-x">
               <table>
                 <thead>
@@ -162,7 +170,7 @@ export default function CommitteePage() {
             </div>
           </>
         )}
-      </Panel>
+      </More>
     </main>
   );
 }

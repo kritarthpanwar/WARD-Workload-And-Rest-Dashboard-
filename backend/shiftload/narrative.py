@@ -13,19 +13,19 @@ import httpx
 from . import config
 
 METRIC_LABELS = {
-    "pct_red_low": "red-shift rate",
-    "pct_red_high": "red-shift rate (upper bound)",
-    "pct_red": "red-shift rate",
-    "pct_insufficient": "share of shifts with insufficient data",
-    "pct_no_break_5h": "share of shifts with five hours without a break",
-    "pct_ratio_met_and_breaks": "share of shifts with ratio met and breaks taken",
+    "pct_red_low": "red shifts",
+    "pct_red_high": "red shifts (upper estimate)",
+    "pct_red": "red shifts",
+    "pct_insufficient": "unknown shifts",
+    "pct_no_break_5h": "shifts with five hours and no break",
+    "pct_ratio_met_and_breaks": "shifts with ratio met and breaks",
     "mean_pct_hrr": "physical load",
-    "unexplained_hr_min": "stress-indicator minutes",
+    "unexplained_hr_min": "stress minutes",
     "phys_load_band": "physical load band",
     "coverage_pct": "coverage",
     "participation_pct": "participation",
 }
-SHIFT_LABELS = {"day": "day", "night": "night", "all": "all"}
+SHIFT_LABELS = {"day": "Days", "night": "Nights", "all": "All shifts"}
 ACTION_LABELS = {
     "called_in_staff": "called in staff",
     "float_for_breaks": "float for breaks",
@@ -119,13 +119,13 @@ def template_narrative(payload: dict) -> dict:
                 "actions": [], "data_note": ""}
     by_kind = {k: [i for i in payload["items"] if i["kind"] == k] for k in ("change", "flag", "action")}
     if by_kind["flag"]:
-        headline = "Unusual readings were flagged this week."
+        headline = "Something unusual this week."
     elif payload["no_red"]:
         headline = "No evidence of overload in recorded shifts."
     elif by_kind["change"]:
-        headline = "Some measures changed from the previous week."
+        headline = "A few things changed since last week."
     else:
-        headline = "No notable change from the previous week."
+        headline = "About the same as last week."
 
     def cap(s: str) -> str:
         return s[0].upper() + s[1:]
@@ -136,15 +136,15 @@ def template_narrative(payload: dict) -> dict:
     return {
         "headline": headline,
         "changes": [
-            f"{cap(i['metric'])} on {SHIFT_LABELS[i['shift_type']]} shifts went {i['direction']}: {{{{{i['key']}}}}}."
+            f"{SHIFT_LABELS[i['shift_type']]}: {i['metric']} went {i['direction']}, {{{{{i['key']}}}}}."
             for i in by_kind["change"]
         ],
         "flags": [
-            f"{cap(i['metric'])} on {SHIFT_LABELS[i['shift_type']]} shifts was flagged: {{{{{i['key']}}}}}."
+            f"{SHIFT_LABELS[i['shift_type']]}: {i['metric']} unusual, {{{{{i['key']}}}}}."
             for i in by_kind["flag"]
         ],
         "actions": [
-            f"After “{i['metric']}” was logged, the no-break share went {i['direction']}: {{{{{i['key']}}}}}."
+            f"After “{i['metric']}”: no-break shifts went {i['direction']}, {{{{{i['key']}}}}}."
             for i in by_kind["action"]
         ],
         "data_note": data_note,

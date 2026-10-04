@@ -122,7 +122,7 @@ export function LiveChart({ windows, breaks, startIso, elapsed }: { windows: Win
         <path d={path} fill="none" stroke="var(--series-1)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
 
         <text x={M.left} y={stripY - 8} fontSize="12" fill="var(--ink-2)">
-          Stress indicator (high heart rate while still)
+          Stress
         </text>
         <line x1={M.left} x2={width - M.right} y1={stripY + STRIP_H} y2={stripY + STRIP_H} stroke="var(--axis)" />
         {windows
