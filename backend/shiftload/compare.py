@@ -60,8 +60,8 @@ class ComparisonRequest(BaseModel):
         elif self.compare_by == "unit":
             b = {**a, "unit": self.units[1]}
         else:
-            a = {**a, "shift_types": ["day"]}
-            b = {**a, "shift_types": ["night"]}
+            a = {**a, "shift_types": ["night"]}
+            b = {**a, "shift_types": ["day"]}
         return [a, b]
 
 
@@ -122,7 +122,7 @@ def interpret(rows: list[dict], a: dict, b: dict, labels: list[str]) -> str:
         return "No comparison: at least one side has no released cells."
     parts = []
     for r in rows:
-        if r["metric"] in ("coverage_pct", "participation_pct") or not r["delta"]:
+        if r["metric"] in ("coverage_pct", "participation_pct", "pct_red_high") or not r["delta"]:
             continue
         word = "higher" if r["delta"] > 0 else "lower"
         parts.append((abs(r["delta"]), f"{r['label']} is {abs(r['delta'])} points {word} in {labels[0]} than in {labels[1]}"))

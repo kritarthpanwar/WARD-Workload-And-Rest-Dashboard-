@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+psycopg[binary,pool]
+numpy
+pandas
+httpx
+pydantic
+tzdata
+pytest
