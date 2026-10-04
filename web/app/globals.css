@@ -1566,7 +1566,6 @@ pre.report {
   flex: 1;
   padding-top: 10px;
   border-top: 4px solid var(--rule);
-  border-radius: 2px;
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--muted);
