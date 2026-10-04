@@ -20,7 +20,7 @@ METRIC_LABELS = {
     "pct_no_break_5h": "share of shifts with five hours without a break",
     "pct_ratio_met_and_breaks": "share of shifts with ratio met and breaks taken",
     "mean_pct_hrr": "physical load",
-    "unexplained_hr_min": "unexplained heart-rate minutes",
+    "unexplained_hr_min": "stress-indicator minutes",
     "phys_load_band": "physical load band",
     "coverage_pct": "coverage",
     "participation_pct": "participation",

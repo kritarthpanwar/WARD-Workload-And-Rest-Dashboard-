@@ -310,7 +310,7 @@ function ShiftTab({ me }: { me: Me }) {
             <div className="value">{hm(cur.since_break_min)}</div>
           </div>
           <div className="tile">
-            <div className="label">Unexplained heart rate</div>
+            <div className="label">Stress indicator</div>
             <div className="value">
               {m.unexplained_hr_min}
               <span className="unit"> min</span>
@@ -327,8 +327,9 @@ function ShiftTab({ me }: { me: Me }) {
         <h3>Physical load (% of heart-rate reserve)</h3>
         <LiveChart windows={cur.windows} breaks={cur.suggested_breaks} startIso={shift.start_ts} elapsed={cur.elapsed_min} />
         <p className="note" style={{ marginTop: 10 }}>
-          Unexplained heart rate is heart rate above what your steps would predict while you are still. It can’t
-          tell stationary effort from arousal, and it never sets the band.
+          Stress indicator: minutes when your heart rate was well above what your steps would predict while you
+          were still. A high heart rate while stationary points to a stressful situation. Hard physical effort
+          without steps counts as physical load instead. This is not a diagnosis and it does not set the band.
         </p>
         <p className="muted">
           Expected-heart-rate model: {cur.model.name}
@@ -493,7 +494,7 @@ function ShiftCard({ card }: { card: Card }) {
             <tr>
               <th>Context</th>
               <td colSpan={2}>
-                {card.time_on_feet_min} min on feet · {card.unexplained_hr_min} min unexplained heart rate (never sets
+                {card.time_on_feet_min} min on feet · {card.unexplained_hr_min} min on the stress indicator (does not set
                 the band)
               </td>
             </tr>

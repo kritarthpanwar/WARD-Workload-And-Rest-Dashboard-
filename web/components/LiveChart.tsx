@@ -22,7 +22,7 @@ function clock(startIso: string, offsetMin: number): string {
 
 /**
  * Two plots on one time axis: physical load (% heart-rate reserve) as a line,
- * and unexplained heart-rate windows as a strip. They are separate measures,
+ * and stress-indicator windows as a strip. They are separate measures,
  * so they get separate plots rather than a shared y-axis.
  */
 export function LiveChart({ windows, breaks, startIso, elapsed }: { windows: Win[]; breaks: Break[]; startIso: string; elapsed: number }) {
@@ -73,7 +73,7 @@ export function LiveChart({ windows, breaks, startIso, elapsed }: { windows: Win
         width={width}
         height={height}
         role="img"
-        aria-label="Physical load and unexplained heart-rate windows over the shift"
+        aria-label="Physical load and stress-indicator windows over the shift"
         onMouseLeave={() => setHover(null)}
         onMouseMove={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
@@ -122,7 +122,7 @@ export function LiveChart({ windows, breaks, startIso, elapsed }: { windows: Win
         <path d={path} fill="none" stroke="var(--series-1)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
 
         <text x={M.left} y={stripY - 8} fontSize="12" fill="var(--ink-2)">
-          Unexplained heart-rate windows
+          Stress indicator (high heart rate while still)
         </text>
         <line x1={M.left} x2={width - M.right} y1={stripY + STRIP_H} y2={stripY + STRIP_H} stroke="var(--axis)" />
         {windows
@@ -156,7 +156,7 @@ export function LiveChart({ windows, breaks, startIso, elapsed }: { windows: Win
           ) : (
             <>
               <div>Physical load: {hw.pct_hrr.toFixed(0)}% of heart-rate reserve</div>
-              <div>Unexplained heart rate: {hw.unexplained ? "yes" : "no"}</div>
+              <div>Stress indicator: {hw.unexplained ? "yes" : "no"}</div>
             </>
           )}
         </div>

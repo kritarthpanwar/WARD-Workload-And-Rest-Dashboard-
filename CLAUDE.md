@@ -34,7 +34,9 @@ Nurse workload documentation tool for StormHack. The full spec is
   footer "Workload documentation tool — not a medical device."
 - Raw minute/window data is deleted when a shift is finalized.
 - No individual-level data for managers, no daily manager view.
-- Never write "stress", diagnosis or causal wording into the product.
+- High heart rate while stationary is presented as the "stress indicator" (team
+  decision, 2026-10-04). It is still never called a diagnosis and never sets the
+  band. No causal wording in summaries.
 
 ## Working rules
 
