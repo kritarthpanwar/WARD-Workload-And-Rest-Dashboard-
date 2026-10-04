@@ -9,3 +9,4 @@ data/eval/
 .impeccable/review/
 .impeccable/hook.cache.json
 .impeccable/config.local.json
+data/logs/
