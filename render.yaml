@@ -1,0 +1,51 @@
+# Render blueprint: the two WARD servers. The website is hosted separately.
+# Values marked "sync: false" are secrets: Render asks for them, they are never stored here.
+services:
+  - type: web
+    name: ward-nurse-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn shiftload.nurse_api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /docs
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.7
+      - key: AUTH_MODE
+        value: both
+      - key: FIREBASE_PROJECT_ID
+        value: ward-1e2ac
+      - key: APP_DB_URL
+        sync: false
+      - key: RELEASE_DB_URL
+        sync: false
+      - key: COHORT_HASH_SALT
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+
+  # reads only the published schema: it gets the read-only database address and nothing else
+  - type: web
+    name: ward-manager-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn shiftload.manager_api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /docs
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.7
+      - key: AUTH_MODE
+        value: both
+      - key: FIREBASE_PROJECT_ID
+        value: ward-1e2ac
+      - key: PUBLISHED_DB_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: COHORT_HASH_SALT
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
