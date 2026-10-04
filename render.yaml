@@ -11,7 +11,7 @@ services:
     healthCheckPath: /docs
     envVars:
       - key: PYTHON_VERSION
-        value: 3.13.7
+        value: 3.14.4
       - key: AUTH_MODE
         value: both
       - key: FIREBASE_PROJECT_ID
@@ -36,7 +36,7 @@ services:
     healthCheckPath: /docs
     envVars:
       - key: PYTHON_VERSION
-        value: 3.13.7
+        value: 3.14.4
       - key: AUTH_MODE
         value: both
       - key: FIREBASE_PROJECT_ID
