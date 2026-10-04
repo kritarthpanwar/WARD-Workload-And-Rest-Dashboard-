@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ErrorLine, More, Panel, useRole } from "@/components/ui";
+import { Badge, ErrorLine, More, PageHeading, Panel, useRole } from "@/components/ui";
 import { WeeklyReport } from "@/components/WeeklyReport";
 import { fmtWeek, managerApi } from "@/lib/api";
 import type { Meta } from "../manager/page";
@@ -51,12 +51,8 @@ export default function CommitteePage() {
 
   return (
     <main>
-      <div className="row">
-        <h1 style={{ flex: 1 }}>Joint committee</h1>
-        <span className="badge">SYNTHETIC DATA</span>
-      </div>
-      <p className="sub">Unit totals only.</p>
-      <div className="pills" style={{ margin: "16px 0 14px" }}>
+      <PageHeading eyebrow="Joint committee" title="Reporting gap" sub="Unit totals only." right={<Badge mode="synthetic" />} />
+      <div className="pills" style={{ margin: "0 0 18px" }}>
         {meta.units.map((u) => (
           <button key={u.unit_id} className={u.unit_id === unit ? "on" : ""} onClick={() => setUnit(u.unit_id)}>
             {u.name}
@@ -118,7 +114,7 @@ export default function CommitteePage() {
         )}
       </More>
 
-      <div className="section-title">Weekly report</div>
+      <div className="section-title" id="report">Weekly report</div>
       <div className="row" style={{ marginBottom: 12 }}>
         <div className="stepper">
           <button disabled={meta.weeks.indexOf(week) <= 0} onClick={() => setWeek(meta.weeks[meta.weeks.indexOf(week) - 1])} aria-label="Previous week">
@@ -136,7 +132,7 @@ export default function CommitteePage() {
         </Panel>
       )}
 
-      <div className="section-title">Who looked at what</div>
+      <div className="section-title" id="access">Who looked at what</div>
       <div className="banner info">
         <strong>Purpose limit.</strong> {meta.purpose_limit}
       </div>

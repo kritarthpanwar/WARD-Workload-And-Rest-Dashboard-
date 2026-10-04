@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BandChip, ErrorLine, More, Panel, useRole } from "@/components/ui";
+import { Badge, BandChip, ErrorLine, More, PageHeading, Panel, useRole } from "@/components/ui";
 import { Cell, STATUS_TEXT, WeeklyReport, redRange } from "@/components/WeeklyReport";
 import { addWeeks, fmtWeek, managerApi } from "@/lib/api";
 
@@ -86,15 +86,11 @@ export default function ManagerPage() {
 
   return (
     <main>
-      <div className="row">
-        <h1 style={{ flex: 1 }}>Unit workload</h1>
-        <span className="badge">SYNTHETIC DATA</span>
-      </div>
-      <p className="sub">Weekly totals. No names.</p>
+      <PageHeading eyebrow="Unit workload · weekly release" title="Weekly workload overview" sub="Weekly totals. No names." right={<Badge mode="synthetic" />} />
       <ErrorLine error={error} />
 
-      <div className="row" style={{ margin: "16px 0 14px" }}>
-        <div className="pills" style={{ flex: 1 }}>
+      <div className="row" style={{ margin: "0 0 18px", justifyContent: "space-between" }}>
+        <div className="pills">
           {meta.units.map((u) => (
             <button key={u.unit_id} className={u.unit_id === unit ? "on" : ""} onClick={() => setUnit(u.unit_id)}>
               {u.name}
@@ -160,10 +156,10 @@ export default function ManagerPage() {
       <div className="section-title">{m.label} — last {meta.weeks.length} weeks</div>
       <Panel>
         <div className="pills" style={{ marginBottom: 12 }}>
-          <button className={allUnits ? "" : "on"} style={{ background: allUnits ? "var(--wash)" : undefined }} onClick={() => setAllUnits(false)}>
+          <button className={allUnits ? "" : "on"} onClick={() => setAllUnits(false)}>
             {unitName}
           </button>
-          <button className={allUnits ? "on" : ""} style={{ background: allUnits ? undefined : "var(--wash)" }} onClick={() => setAllUnits(true)}>
+          <button className={allUnits ? "on" : ""} onClick={() => setAllUnits(true)}>
             All units
           </button>
         </div>
@@ -203,14 +199,14 @@ export default function ManagerPage() {
         </ul>
       </More>
 
-      <div className="section-title">Compare</div>
+      <div className="section-title" id="compare">Compare</div>
       <Compare meta={meta} unit={unit} scenario={scenario} />
 
       <div className="section-title">More</div>
       <More title={`Unusual weeks for ${unitName} (${unitFlags.length})`}>
         <FlagList flags={unitFlags} />
       </More>
-      <More title="Log an action you took">
+      <More title="Log an action you took" id="actions" open>
         <Actions unit={unit} week={week} />
       </More>
       <More title="Demo: what if fewer nurses took part?">
@@ -416,7 +412,7 @@ function Compare({ meta, unit, scenario }: { meta: Meta; unit: string; scenario:
     <Panel>
       <div className="pills" style={{ marginBottom: 12 }}>
         {presets.map((p) => (
-          <button key={p.key} className={active === p.key ? "on" : ""} style={{ background: active === p.key ? undefined : "var(--wash)" }} onClick={() => run(p)}>
+          <button key={p.key} className={active === p.key ? "on" : ""} onClick={() => run(p)}>
             {p.label}
           </button>
         ))}
@@ -510,7 +506,7 @@ function Actions({ unit, week }: { unit: string; week: string }) {
       <p className="sub">For the week of {fmtWeek(week)}</p>
       <div className="pills">
         {ACTION_TYPES.map(([k, label]) => (
-          <button key={k} className={type === k ? "on" : ""} style={{ background: type === k ? undefined : "var(--wash)" }} onClick={() => setType(k)}>
+          <button key={k} className={type === k ? "on" : ""} onClick={() => setType(k)}>
             {label}
           </button>
         ))}
@@ -567,7 +563,7 @@ function Guardrail() {
             <h3>1. A bad draft (canned example)</h3>
             <pre className="report">{demo.model_output.headline}</pre>
           </div>
-          <div className="banner bad" style={{ boxShadow: "none", background: "var(--wash)" }}>
+          <div className="banner bad">
             <strong>2. Rejected:</strong> {demo.rejection}
           </div>
           <div>

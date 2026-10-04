@@ -1,8 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ReactNode, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { ReactNode, useEffect, useState } from "react";
+import {
+  Activity,
+  BarChart3,
+  ClipboardList,
+  Coffee,
+  Columns2,
+  Hand,
+  HeartPulse,
+  History,
+  ListChecks,
+  LockKeyhole,
+  LogOut,
+  Menu,
+  Moon,
+  Settings,
+  ShieldCheck,
+  Sun,
+  Upload,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { Role, saveSession, useSession } from "@/lib/api";
 
 export type Mode = "live" | "replay" | "synthetic";
@@ -12,26 +33,41 @@ export function Badge({ mode, note }: { mode: Mode; note?: string }) {
   return (
     <span className={`badge ${mode}`}>
       {mode.toUpperCase()}
-      {note ? ` · ${note}` : ""}
+      {note ? ` · ${note.toUpperCase()}` : ""}
     </span>
   );
 }
 
-export function Panel({ title, mode, modeNote, actions, children }: {
+export function PageHeading({ eyebrow, title, sub, right }: { eyebrow?: string; title: string; sub?: ReactNode; right?: ReactNode }) {
+  return (
+    <div className="page-heading">
+      <div>
+        {eyebrow && <div className="eyebrow">{eyebrow}</div>}
+        <h1>{title}</h1>
+        {sub && <p className="sub">{sub}</p>}
+      </div>
+      {right}
+    </div>
+  );
+}
+
+export function Panel({ title, mode, modeNote, actions, children, className = "", id }: {
   title?: string;
   mode?: Mode;
   modeNote?: string;
   actions?: ReactNode;
   children: ReactNode;
+  className?: string;
+  id?: string;
 }) {
   return (
-    <section className="panel">
+    <section className={`panel ${className}`} id={id}>
       {(title || mode || actions) && (
         <div className="panel-head">
           {title && <h2>{title}</h2>}
-          {mode && <Badge mode={mode} note={modeNote} />}
           <span className="spacer" />
           {actions}
+          {mode && <Badge mode={mode} note={modeNote} />}
         </div>
       )}
       {children}
@@ -40,12 +76,20 @@ export function Panel({ title, mode, modeNote, actions, children }: {
 }
 
 /** Collapsed-by-default section: detail on demand. */
-export function More({ title, children, open }: { title: ReactNode; children: ReactNode; open?: boolean }) {
+export function More({ title, children, open, id }: { title: ReactNode; children: ReactNode; open?: boolean; id?: string }) {
   return (
-    <details className="more" open={open}>
+    <details className="more" open={open} id={id}>
       <summary>{title}</summary>
       <div className="body">{children}</div>
     </details>
+  );
+}
+
+export function Toggle({ value, onChange, label }: { value: boolean; onChange: () => void; label: string }) {
+  return (
+    <button className={`toggle ${value ? "on" : ""}`} role="switch" aria-checked={value} aria-label={label} onClick={onChange}>
+      <span />
+    </button>
   );
 }
 
@@ -74,15 +118,15 @@ export function BandChip({ band, big, label }: { band: string | null; big?: bool
 }
 
 /** Progress ring with a value in the middle. */
-export function Ring({ fraction, color, size = 112, children }: { fraction: number; color: string; size?: number; children: ReactNode }) {
-  const stroke = 11;
+export function Ring({ fraction, color, size = 116, children }: { fraction: number; color: string; size?: number; children: ReactNode }) {
+  const stroke = 10;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const f = Math.min(Math.max(fraction, 0), 1);
   return (
     <div style={{ position: "relative", width: size, height: size, flex: "none" }}>
       <svg className="ring" width={size} height={size} style={{ transform: "rotate(-90deg)" }} aria-hidden>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--wash)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--raised)" strokeWidth={stroke} />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - f)} />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", lineHeight: 1.1 }}>
@@ -92,24 +136,38 @@ export function Ring({ fraction, color, size = 112, children }: { fraction: numb
   );
 }
 
-const PATHS: Record<string, string> = {
-  heart: "M12 20s-7-4.4-7-9.6A4 4 0 0 1 12 8a4 4 0 0 1 7 2.4C19 15.6 12 20 12 20Z",
-  clock: "M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 4v4.5l3 1.8",
-  list: "M5 7h14M5 12h14M5 17h14",
-  gear: "M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0-5v2m0 12v2m8-8h-2M6 12H4m13.7-5.7-1.4 1.4M7.7 16.3l-1.4 1.4m11.4 0-1.4-1.4M7.7 7.7 6.3 6.3",
-  hand: "M8 12V6.5a1.5 1.5 0 0 1 3 0V11m0-5.5a1.5 1.5 0 0 1 3 0V11m0-4a1.5 1.5 0 0 1 3 0v6.5c0 3.6-2.4 6.5-6 6.5-2.6 0-4-1.2-5.2-3.2L4 14a1.5 1.5 0 0 1 2.6-1.5L8 14.5",
-  chart: "M5 19V10m7 9V5m7 14v-6",
-  people: "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5 8c0-2.8 2.2-5 5-5s5 2.200 5 5m1-8a2.500 2.500 0 1 0 0-5m4 13c0-2.300-1.500-4.200-3.500-4.800",
-  shield: "M12 4 5 7v5c0 4 3 7 7 8 4-1 7-4 7-8V7l-7-3Z",
-};
+// ------------------------------------------------------------------ shell
 
-export function Icon({ name }: { name: keyof typeof PATHS | string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d={PATHS[name]} />
-    </svg>
-  );
-}
+type NavItem = { label: string; href: string; icon: LucideIcon };
+
+const NAV: Record<Role, { section: string; items: NavItem[] }> = {
+  nurse: {
+    section: "Nurse",
+    items: [
+      { label: "My shift", href: "/nurse", icon: Activity },
+      { label: "My shifts", href: "/nurse/history", icon: History },
+      { label: "Settings & privacy", href: "/nurse/settings", icon: Settings },
+    ],
+  },
+  charge_nurse: { section: "Relief", items: [{ label: "Relief requests", href: "/relief", icon: Coffee }] },
+  manager: {
+    section: "Manager",
+    items: [
+      { label: "Weekly view", href: "/manager", icon: BarChart3 },
+      { label: "Compare", href: "/manager#compare", icon: Columns2 },
+      { label: "Actions", href: "/manager#actions", icon: ListChecks },
+    ],
+  },
+  joint_committee: {
+    section: "Joint committee",
+    items: [
+      { label: "Reporting gap", href: "/committee", icon: ClipboardList },
+      { label: "Weekly report", href: "/committee#report", icon: Users },
+      { label: "Access log", href: "/committee#access", icon: LockKeyhole },
+    ],
+  },
+  admin: { section: "Trustee", items: [{ label: "Weekly release", href: "/trustee", icon: Upload }] },
+};
 
 const ROLE_LABEL: Record<Role, string> = {
   nurse: "Nurse",
@@ -119,29 +177,123 @@ const ROLE_LABEL: Record<Role, string> = {
   admin: "Trustee",
 };
 
-export function TopBar() {
+export const ROLE_ICON: Record<Role, LucideIcon> = {
+  nurse: HeartPulse,
+  charge_nurse: Hand,
+  manager: BarChart3,
+  joint_committee: Users,
+  admin: ShieldCheck,
+};
+
+function useTheme(): [boolean, () => void] {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"));
+  }, []);
+  const toggle = () => {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    try {
+      localStorage.setItem("shiftload-theme", next ? "dark" : "light");
+    } catch {
+      /* private mode: theme just won't persist */
+    }
+  };
+  return [dark, toggle];
+}
+
+export function Shell({ children }: { children: ReactNode }) {
   const session = useSession();
+  const pathname = usePathname();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [hash, setHash] = useState("");
+  const [dark, toggleTheme] = useTheme();
+
+  useEffect(() => {
+    const sync = () => setHash(window.location.hash);
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, [pathname]);
+  useEffect(() => setOpen(false), [pathname, hash]);
+
+  const signedIn = !!session && pathname !== "/";
+  const nav = session ? NAV[session.role] : null;
+  const isActive = (href: string) => {
+    const [path, h] = href.split("#");
+    return h ? pathname === path && hash === `#${h}` : pathname === path && (!hash || !nav?.items.some((i) => i.href === `${path}${hash}`));
+  };
+
   return (
-    <header className="topbar">
-      <Link href="/" className="brand">
-        ShiftLoad
-      </Link>
-      <span className="spacer" />
-      {session && (
+    <div className={`shell ${signedIn ? "" : "signed-out"}`}>
+      {signedIn && nav && session && (
         <>
-          <span className="who">{ROLE_LABEL[session.role]} · demo sign-in</span>
-          <button
-            onClick={() => {
-              saveSession(null);
-              router.push("/");
-            }}
-          >
-            Switch
-          </button>
+          {open && <div className="backdrop" onClick={() => setOpen(false)} />}
+          <aside className={`sidebar ${open ? "open" : ""}`} aria-label="ShiftLoad navigation">
+            <Link href="/" className="brand">
+              <span className="brand-symbol">
+                <Activity size={21} />
+              </span>
+              <span>
+                ShiftLoad<span className="brand-period">.</span>
+              </span>
+            </Link>
+            <span className="role-chip">{ROLE_LABEL[session.role]}</span>
+            <div className="nav-section">{nav.section.toUpperCase()}</div>
+            <nav>
+              {nav.items.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link key={item.href} href={item.href} className={`nav-item ${isActive(item.href) ? "active" : ""}`} onClick={() => setHash(item.href.includes("#") ? `#${item.href.split("#")[1]}` : "")}>
+                    <Icon size={20} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="sidebar-footer">
+              <button className="nav-item" onClick={toggleTheme}>
+                {dark ? <Sun size={19} /> : <Moon size={19} />}
+                {dark ? "Light mode" : "Dark mode"}
+              </button>
+              <button
+                className="nav-item"
+                onClick={() => {
+                  saveSession(null);
+                  router.push("/");
+                }}
+              >
+                <LogOut size={19} />
+                Switch role
+              </button>
+              <div className="sidebar-note">
+                <ShieldCheck size={16} style={{ flex: "none", marginTop: 2 }} />
+                Demo sign-in. Real sign-in is not connected yet.
+              </div>
+            </div>
+          </aside>
         </>
       )}
-    </header>
+      <div className="workspace">
+        {signedIn && (
+          <header className="appbar">
+            <button className="icon-button" aria-label="Open navigation" onClick={() => setOpen(true)}>
+              <Menu size={22} />
+            </button>
+            <span className="wordmark">
+              ShiftLoad<span style={{ color: "var(--teal)" }}>.</span>
+            </span>
+          </header>
+        )}
+        {children}
+        <footer className="disclaimer">
+          <ShieldCheck size={15} />
+          Workload documentation tool — not a medical device.
+        </footer>
+      </div>
+    </div>
   );
 }
 

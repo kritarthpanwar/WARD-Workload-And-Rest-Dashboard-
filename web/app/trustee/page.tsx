@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ErrorLine, Panel, useRole } from "@/components/ui";
+import { ErrorLine, PageHeading, Panel, useRole } from "@/components/ui";
 import { nurseApi } from "@/lib/api";
 
 type Result = { cells: number; released: number; by_status: Record<string, number>; flags: number; reports: number; gemini_reports: number };
@@ -19,12 +19,11 @@ export default function TrusteePage() {
   const [result, setResult] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  if (!session) return <main className="narrow" />;
+  if (!session) return <main />;
   return (
-    <main className="narrow">
-      <h1>Trustee</h1>
-      <p className="sub">Publishes the weekly numbers managers can see.</p>
-      <Panel title="Weekly release">
+    <main>
+      <PageHeading eyebrow="Trustee" title="Weekly release" sub="Publishes the weekly numbers managers can see." />
+      <Panel className="trustee-panel">
         <div className="stack">
           <button
             className="primary big"

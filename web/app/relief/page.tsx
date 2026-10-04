@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ErrorLine, useRole } from "@/components/ui";
+import { Badge, ErrorLine, PageHeading, useRole } from "@/components/ui";
 import { NURSE_API, authHeader, nurseApi } from "@/lib/api";
 
 type Req = { request_id: string; display_name: string; recipient_type: string; unit_name: string };
@@ -51,15 +51,11 @@ export default function ReliefPage() {
     };
   }, [session]);
 
-  if (!session) return <main className="narrow" />;
+  if (!session) return <main />;
   return (
-    <main className="narrow">
-      <h1>Relief requests</h1>
-      <p className="sub">Who is asking for relief right now.</p>
-      <div className="row" style={{ margin: "14px 4px 10px" }}>
-        <span className="badge">LIVE</span>
-      </div>
-      <div>
+    <main>
+      <PageHeading eyebrow="Charge nurse" title="Relief requests" sub="Who is asking for relief right now." right={<Badge mode="live" />} />
+      <div style={{ maxWidth: 720 }}>
         <ErrorLine error={error} />
         {reqs === null && !error && <p className="sub">Connecting…</p>}
         {reqs?.length === 0 && (

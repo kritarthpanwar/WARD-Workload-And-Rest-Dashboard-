@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import { ReactNode } from "react";
-import { TopBar } from "@/components/ui";
+import { Shell } from "@/components/ui";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "ShiftLoad",
@@ -10,13 +13,17 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 
+// Applies the saved light/dark choice before first paint.
+const THEME_SCRIPT = `try{if(localStorage.getItem('shiftload-theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}`;
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>
-        <TopBar />
-        {children}
-        <footer className="disclaimer">Workload documentation tool — not a medical device.</footer>
+        <Shell>{children}</Shell>
       </body>
     </html>
   );
