@@ -1324,8 +1324,8 @@ th.num {
 
 pre.report {
   white-space: pre-wrap;
-  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  font-size: 0.8125rem;
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
   line-height: 1.55;
   background: var(--tint);
   border: 1px solid var(--rule);
