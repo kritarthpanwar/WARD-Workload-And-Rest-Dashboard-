@@ -1,75 +1,88 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-04T12:24:08Z",
+  "generatedAt": "2026-10-04T12:47:49Z",
   "title": "Design System: WARD",
   "extensions": {
     "colorMeta": {
-      "teal": { "role": "primary", "displayName": "Roster Teal", "canonical": "#0f766d", "tonalRamp": ["#04302c", "#0a5a52", "#0f766d", "#1b7d72", "#63b7a9", "#a6d6cd", "#d6ebe7", "#e2f1ee"] },
-      "teal-tint": { "role": "primary", "displayName": "Teal Wash", "canonical": "#e2f1ee" },
-      "load-1": { "role": "primary", "displayName": "Load 1, lightest", "canonical": "#d6ebe7" },
-      "load-2": { "role": "primary", "displayName": "Load 2", "canonical": "#a6d6cd" },
-      "load-3": { "role": "primary", "displayName": "Load 3", "canonical": "#63b7a9" },
-      "load-4": { "role": "primary", "displayName": "Load 4", "canonical": "#1b7d72" },
-      "load-5": { "role": "primary", "displayName": "Load 5, heaviest", "canonical": "#0a5a52" },
-      "navy": { "role": "secondary", "displayName": "Shell Navy", "canonical": "#173248", "tonalRamp": ["#0a141d", "#102435", "#173248", "#24465f", "#36566d", "#6d899d", "#a9bccb", "#e9f0f5"] },
-      "navy-2": { "role": "secondary", "displayName": "Shell Navy, hover", "canonical": "#24465f" },
-      "navy-rule": { "role": "secondary", "displayName": "Shell Rule", "canonical": "#36566d" },
-      "navy-ink": { "role": "secondary", "displayName": "Shell Ink", "canonical": "#e9f0f5" },
-      "navy-muted": { "role": "secondary", "displayName": "Shell Muted", "canonical": "#a9bccb" },
-      "hl-load": { "role": "tertiary", "displayName": "Teal Highlighter (load)", "canonical": "rgba(22, 160, 145, 0.38)" },
-      "hl-stress": { "role": "tertiary", "displayName": "Amber Highlighter (stress)", "canonical": "rgba(240, 176, 32, 0.46)" },
-      "hl-sleep": { "role": "tertiary", "displayName": "Violet Highlighter (sleep)", "canonical": "rgba(140, 108, 214, 0.3)" },
-      "hl-alert": { "role": "tertiary", "displayName": "Red Highlighter (alert)", "canonical": "rgba(214, 72, 68, 0.24)" },
-      "pen": { "role": "tertiary", "displayName": "Red Pen", "canonical": "#b23c3a", "tonalRamp": ["#3a1110", "#6b2221", "#932f2d", "#b23c3a", "#d0605d", "#e59996", "#f4cfcd", "#fbeceb"] },
-      "pen-tint": { "role": "tertiary", "displayName": "Pen Wash", "canonical": "#fbeceb" },
-      "good": { "role": "tertiary", "displayName": "Band Green", "canonical": "#2c8550", "tonalRamp": ["#0d2e1b", "#184d2d", "#25693d", "#2c8550", "#52a873", "#8ccba4", "#c4e5d0", "#dff0e4"] },
-      "warning": { "role": "tertiary", "displayName": "Band Amber", "canonical": "#b07a12", "tonalRamp": ["#3a2804", "#634508", "#8a5f0d", "#b07a12", "#c98a12", "#e3b55a", "#f1d9a6", "#faf0d9"] },
-      "critical": { "role": "tertiary", "displayName": "Band Red", "canonical": "#b23c3a" },
-      "nodata": { "role": "neutral", "displayName": "Struck Box Stroke", "canonical": "#a9b7c2" },
-      "stress": { "role": "tertiary", "displayName": "Stress Amber", "canonical": "#c98a12" },
-      "sleep": { "role": "tertiary", "displayName": "Sleep Violet", "canonical": "#6f55b5", "tonalRamp": ["#221740", "#3d2b70", "#5a3f97", "#6f55b5", "#8c6cd6", "#b3a0ef", "#d6cbf3", "#e9e3f7"] },
-      "live-bg": { "role": "tertiary", "displayName": "LIVE badge ground", "canonical": "#dff0e4" },
-      "live-ink": { "role": "tertiary", "displayName": "LIVE badge ink", "canonical": "#25693d" },
-      "replay-bg": { "role": "neutral", "displayName": "REPLAY badge ground", "canonical": "#e3e9ee" },
-      "replay-ink": { "role": "neutral", "displayName": "REPLAY badge ink", "canonical": "#3c5163" },
-      "synthetic-bg": { "role": "tertiary", "displayName": "SYNTHETIC badge ground", "canonical": "#e9e3f7" },
-      "synthetic-ink": { "role": "tertiary", "displayName": "SYNTHETIC badge ink", "canonical": "#5a3f97" },
-      "paper": { "role": "neutral", "displayName": "Roster Paper", "canonical": "#e9eef2", "tonalRamp": ["#0b1015", "#18212a", "#2c3945", "#586d7e", "#a9b7c2", "#c3cfd8", "#dfe7ec", "#e9eef2"] },
-      "sheet": { "role": "neutral", "displayName": "Sheet", "canonical": "#fcfdfd" },
-      "tint": { "role": "neutral", "displayName": "Sheet Tint", "canonical": "#f2f6f8" },
-      "rule": { "role": "neutral", "displayName": "Rule", "canonical": "#c3cfd8" },
-      "rule-soft": { "role": "neutral", "displayName": "Soft Rule", "canonical": "#dfe7ec" },
-      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#14283a", "tonalRamp": ["#0a141d", "#14283a", "#24394b", "#3c5163", "#586d7e", "#94a6b4", "#c2cfd9", "#edf2f6"] },
-      "ink-2": { "role": "neutral", "displayName": "Second Ink", "canonical": "#3c5163" },
-      "muted": { "role": "neutral", "displayName": "Muted", "canonical": "#586d7e" }
+      "teal": { "role": "primary", "displayName": "Ward Teal", "canonical": "#0b7f73", "tonalRamp": ["#03302b", "#075a51", "#0b7f73", "#0e9485", "#4fd6c4", "#7cccc0", "#b9e5de", "#e3f4f1"] },
+      "teal-bright": { "role": "primary", "displayName": "Bright Teal (data and focus)", "canonical": "#0e9485" },
+      "teal-deep": { "role": "primary", "displayName": "Deep Teal (gradient end)", "canonical": "#085a51" },
+      "teal-tint": { "role": "primary", "displayName": "Teal Wash", "canonical": "#e3f4f1" },
+      "on-teal": { "role": "primary", "displayName": "On Teal", "canonical": "#ffffff" },
+      "on-teal-soft": { "role": "primary", "displayName": "On Teal, supporting", "canonical": "#e2f4f1" },
+      "load-1": { "role": "primary", "displayName": "Load 1, lightest", "canonical": "#e4f5f2" },
+      "load-2": { "role": "primary", "displayName": "Load 2", "canonical": "#b9e5de" },
+      "load-3": { "role": "primary", "displayName": "Load 3", "canonical": "#7cccc0" },
+      "load-4": { "role": "primary", "displayName": "Load 4", "canonical": "#17877b" },
+      "load-5": { "role": "primary", "displayName": "Load 5, heaviest", "canonical": "#075a51" },
+      "navy": { "role": "secondary", "displayName": "Rail Navy", "canonical": "#12283b", "tonalRamp": ["#0a121b", "#0d1823", "#12283b", "#1d3b54", "#41566a", "#8fa6ba", "#9fb4c7", "#e8edf3"] },
+      "navy-2": { "role": "secondary", "displayName": "Navy Step", "canonical": "#1d3b54" },
+      "navy-muted": { "role": "secondary", "displayName": "Rail Icon, resting", "canonical": "#9fb4c7" },
+      "rail-active-bg": { "role": "secondary", "displayName": "Rail Active Glow", "canonical": "rgba(79, 214, 196, 0.18)" },
+      "rail-active-ink": { "role": "secondary", "displayName": "Rail Active Icon", "canonical": "#5fe0cf" },
+      "rail-hover-bg": { "role": "secondary", "displayName": "Rail Hover Wash", "canonical": "rgba(255, 255, 255, 0.09)" },
+      "stress": { "role": "tertiary", "displayName": "Stress Amber", "canonical": "#f2a93b", "tonalRamp": ["#3a2804", "#6b4a08", "#9c6c0e", "#d18a12", "#f2a93b", "#f0b95a", "#f7d9a3", "#fdf1db"] },
+      "sleep": { "role": "tertiary", "displayName": "Sleep Violet", "canonical": "#8b6fe8", "tonalRamp": ["#251d3a", "#3a2a80", "#4b2fb0", "#6c4fd6", "#8b6fe8", "#b3a0ef", "#c8b6f6", "#ece6fb"] },
+      "good": { "role": "tertiary", "displayName": "Band Green", "canonical": "#1f9254", "tonalRamp": ["#0c2c1a", "#14301f", "#1c6b3d", "#1f9254", "#6ccf8d", "#8ed9a6", "#c3e8d0", "#e0f3e7"] },
+      "warning": { "role": "tertiary", "displayName": "Band Amber", "canonical": "#d18a12" },
+      "critical": { "role": "tertiary", "displayName": "Band Red", "canonical": "#d2453c", "tonalRamp": ["#33191a", "#6e211c", "#a3322b", "#c9433b", "#d2453c", "#f28b84", "#f8c7c3", "#fdecea"] },
+      "pen": { "role": "tertiary", "displayName": "Alert Red", "canonical": "#c9433b" },
+      "pen-tint": { "role": "tertiary", "displayName": "Alert Wash", "canonical": "#fdecea" },
+      "hl-load": { "role": "tertiary", "displayName": "Load Highlight", "canonical": "rgba(14, 148, 133, 0.16)" },
+      "hl-stress": { "role": "tertiary", "displayName": "Stress Highlight", "canonical": "rgba(242, 169, 59, 0.26)" },
+      "hl-alert": { "role": "tertiary", "displayName": "Alert Highlight", "canonical": "rgba(229, 88, 79, 0.16)" },
+      "live-bg": { "role": "tertiary", "displayName": "LIVE badge ground", "canonical": "#e0f3e7" },
+      "live-ink": { "role": "tertiary", "displayName": "LIVE badge text", "canonical": "#1c6b3d" },
+      "replay-bg": { "role": "neutral", "displayName": "REPLAY badge ground", "canonical": "#e8edf3" },
+      "replay-ink": { "role": "neutral", "displayName": "REPLAY badge text", "canonical": "#41566a" },
+      "synthetic-bg": { "role": "tertiary", "displayName": "SYNTHETIC badge ground", "canonical": "#ece6fb" },
+      "synthetic-ink": { "role": "tertiary", "displayName": "SYNTHETIC badge text", "canonical": "#4b2fb0" },
+      "paper": { "role": "neutral", "displayName": "Ground", "canonical": "#f3f6fb", "tonalRamp": ["#0a121b", "#111d2a", "#172636", "#1e2f40", "#44566a", "#b6c3cf", "#e4eaf1", "#f3f6fb"] },
+      "sheet": { "role": "neutral", "displayName": "Card", "canonical": "#ffffff" },
+      "tint": { "role": "neutral", "displayName": "Tint", "canonical": "#f1f5fa" },
+      "rule": { "role": "neutral", "displayName": "Rule", "canonical": "#e4eaf1" },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#0f2233", "tonalRamp": ["#0a121b", "#0f2233", "#2c4257", "#4a5f73", "#5d7186", "#9bb0c3", "#b3c4d3", "#eef4f9"] },
+      "ink-2": { "role": "neutral", "displayName": "Second Ink", "canonical": "#4a5f73" },
+      "muted": { "role": "neutral", "displayName": "Muted", "canonical": "#5d7186" },
+      "nodata": { "role": "neutral", "displayName": "No Data (dashed stroke)", "canonical": "#b6c3cf" }
     },
     "typographyMeta": {
-      "display": { "displayName": "Display figure", "purpose": "The one large quantity on a sheet (time since last break). Wide, tabular; unit set beside it in body face." },
-      "headline": { "displayName": "Page heading", "purpose": "One per page, on a 2px ink rule. Also the shift verdict." },
-      "title": { "displayName": "Section title", "purpose": "Section headings outside a panel." },
-      "statement": { "displayName": "Statement", "purpose": "Highlight sentences under the roster; names in relief requests." },
-      "figure": { "displayName": "Figure", "purpose": "Values in sheet tables and week cells. Wide, tabular." },
-      "body": { "displayName": "Body", "purpose": "Sentences, capped at 70ch. 700 for row heads and button text." },
-      "body-small": { "displayName": "Body small", "purpose": "Legends, keys, deltas, footer." },
-      "label": { "displayName": "Column head", "purpose": "Narrow uppercase caps for panel heads, table heads, roster row labels and hours." },
-      "wordmark": { "displayName": "Wordmark", "purpose": "WARD, extra wide, in the shell and on sign-in." }
+      "display": { "displayName": "Display figure", "purpose": "The one live figure on the chart card (load right now). Tabular; unit follows at 1.0625rem / 600." },
+      "hero": { "displayName": "Hero statement", "purpose": "The single statement on the reporting-gap card; same size and weight for the time inside the break ring." },
+      "headline": { "displayName": "Page heading", "purpose": "One per page, with a one-line sub in second ink." },
+      "figure": { "displayName": "Stat figure", "purpose": "Values on stat cards. Tabular; units at 0.9375rem / 600." },
+      "title": { "displayName": "Title", "purpose": "Headings inside a card and section titles between cards." },
+      "card-title": { "displayName": "Card title", "purpose": "The heading in a card's head row, beside its badge." },
+      "statement": { "displayName": "Statement", "purpose": "Highlight chips and names in lists: one plain sentence." },
+      "body": { "displayName": "Body", "purpose": "Sentences, capped at 70ch." },
+      "control": { "displayName": "Control", "purpose": "Buttons and field labels; unselected segments drop to 600." },
+      "body-small": { "displayName": "Body small", "purpose": "Legends, deltas, stat names (700), chips (700), footer." },
+      "label": { "displayName": "Badge label", "purpose": "Uppercase, provenance badges only." }
     },
     "shadows": [
-      { "name": "tooltip-lift", "value": "0 6px 18px rgba(8, 18, 28, 0.25)", "purpose": "Hover readout over roster and week cells." },
-      { "name": "drawer-edge", "value": "14px 0 34px rgba(8, 18, 28, 0.3)", "purpose": "Sidebar when it slides over content below 1000px." },
-      { "name": "cell-hover-ring", "value": "inset 0 0 0 2px color-mix(in srgb, var(--ink) 45%, transparent)", "purpose": "Week cell under the pointer." }
+      { "name": "shadow", "value": "0 1px 2px rgba(0, 0, 0, 0.05), 0 12px 32px -12px rgba(0, 0, 0, 0.16)", "purpose": "Rest: cards, stat cards, lists, banners, default buttons, segmented and stepper tracks on the ground." },
+      { "name": "shadow (dark)", "value": "0 16px 40px -18px rgba(0, 0, 0, 0.7)", "purpose": "Rest shadow under the dark class." },
+      { "name": "shadow-lift", "value": "0 2px 4px rgba(0, 0, 0, 0.06), 0 20px 40px -14px rgba(0, 0, 0, 0.22)", "purpose": "Hover: buttons (2px rise), stat cards (3px), sign-in role cards (4px), week cells (scale 1.08)." },
+      { "name": "shadow-lift (dark)", "value": "0 22px 48px -18px rgba(0, 0, 0, 0.85)", "purpose": "Lift shadow under the dark class." },
+      { "name": "tooltip", "value": "0 12px 26px -10px rgba(0, 0, 0, 0.55)", "purpose": "Navy readout over the chart and week cells." }
     ],
     "motion": [
-      { "name": "ease", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Drawer slide (0.22s), toggle thumb and chevron (0.18s), highlighter swipe (0.42s)." },
-      { "name": "state", "value": "0.15s", "purpose": "Background, colour and border changes on buttons and nav items." },
-      { "name": "swipe", "value": "clip-path inset(0 100% 0 0) to inset(0) over 0.42s", "purpose": "Highlighter wipes in from the left across the roster." },
-      { "name": "reduced-motion", "value": "animation: none; transition: none", "purpose": "All motion is removed under prefers-reduced-motion." }
+      { "name": "ease", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "The one easing for everything that moves: lifts, toggle thumb, chevron, meters, bars, ring, chart draw-in." },
+      { "name": "press", "value": "transform 0.18s; hover translateY(-2px), active scale(0.97)", "purpose": "Buttons rise on hover and compress when pressed." },
+      { "name": "card-lift", "value": "transform 0.25s, box-shadow 0.25s; translateY(-3px)", "purpose": "Stat cards lifting on hover; sign-in role cards rise 4px." },
+      { "name": "chart-draw", "value": "stroke-dashoffset 1 to 0 over 1.6s", "purpose": "The load line draws itself in on arrival." },
+      { "name": "chart-rise", "value": "opacity 0 to 1 over 0.9s, 0.5s delay, ease-out", "purpose": "The area fill and a chosen highlight span fade up after the line." },
+      { "name": "now-pulse", "value": "scale 1 to 1.4, 1.6s ease-in-out, infinite", "purpose": "The latest point on the chart." },
+      { "name": "ring-refill", "value": "stroke-dashoffset 1.1s; resets with no transition when under 35% visible", "purpose": "The break ring empties off screen and refills each time it scrolls back into view (user request)." },
+      { "name": "grow", "value": "scaleX 0 to 1 from the left; 0.5s meters, 0.6s paired bars, 0.8s share bar", "purpose": "Meters and bars arrive from the left." },
+      { "name": "pop", "value": "opacity 0, translateY(8px) scale(0.98) to rest; 0.35s (0.5s verdict swatch)", "purpose": "New relief requests and the shift verdict swatch." },
+      { "name": "theme", "value": "background 0.3s, color 0.3s", "purpose": "Light and dark switch on the page and cards." },
+      { "name": "reduced-motion", "value": "animation: none; transition: none", "purpose": "All motion is removed under prefers-reduced-motion; the chart is shown complete." }
     ],
     "breakpoints": [
       { "name": "split-stack", "value": "1100px" },
-      { "name": "drawer", "value": "1000px" },
       { "name": "grid-stack", "value": "860px" },
-      { "name": "signin-stack", "value": "620px" }
+      { "name": "rail-to-top-bar", "value": "760px" }
     ]
   },
   "components": [
@@ -77,120 +90,139 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The one teal action on a sheet: request relief, confirm, continue.",
-      "html": "<button class=\"ds-btn ds-btn-primary\">Request relief <svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button>",
-      "css": ".ds-btn { min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 1px solid var(--ink); border-radius: var(--radius); background: var(--sheet); color: var(--ink); font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; } .ds-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; } .ds-btn-primary { background: var(--teal); border-color: var(--teal); color: var(--on-teal); } .ds-btn-primary:hover { background: color-mix(in srgb, var(--teal) 88%, var(--ink)); }"
+      "description": "The teal action: confirm, continue, play. Rises on hover, compresses on press.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Confirm breaks <svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button>",
+      "css": ".ds-btn { min-height: 46px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 0; border-radius: var(--radius-sm); background: var(--sheet); color: var(--ink); font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem; cursor: pointer; box-shadow: var(--shadow); transition: transform 0.18s var(--ease), box-shadow 0.2s, background 0.2s, color 0.2s; } .ds-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); } .ds-btn:active { transform: scale(0.97); } .ds-btn:focus-visible { outline: 3px solid var(--teal-bright); outline-offset: 2px; } .ds-btn-primary { background: var(--teal); color: var(--on-teal); }"
     },
     {
       "name": "Default Button",
       "kind": "button",
       "refersTo": "button",
-      "description": "Ink-outlined sheet button for secondary actions such as End shift.",
-      "html": "<button class=\"ds-btn-default\">End shift</button>",
-      "css": ".ds-btn-default { min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center; gap: 9px; border: 1px solid var(--ink); border-radius: var(--radius); background: var(--sheet); color: var(--ink); font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem; cursor: pointer; transition: background 0.15s; } .ds-btn-default:hover { background: var(--tint); } .ds-btn-default:active { background: var(--rule-soft); } .ds-btn-default:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }"
+      "description": "Card-white button on the rest shadow for secondary actions such as End shift.",
+      "html": "<button class=\"ds-btn-default\">End shift <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button>",
+      "css": ".ds-btn-default { min-height: 46px; padding: 0 18px; display: inline-flex; align-items: center; gap: 9px; border: 0; border-radius: var(--radius-sm); background: var(--sheet); color: var(--ink); font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem; cursor: pointer; box-shadow: var(--shadow); transition: transform 0.18s var(--ease), box-shadow 0.2s; } .ds-btn-default:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); } .ds-btn-default:active { transform: scale(0.97); } .ds-btn-default:focus-visible { outline: 3px solid var(--teal-bright); outline-offset: 2px; }"
     },
     {
-      "name": "Danger Button",
-      "kind": "button",
-      "refersTo": "button-danger",
-      "description": "Red pen outline for withdrawal and other irreversible actions.",
-      "html": "<button class=\"ds-btn-danger\">Withdraw</button>",
-      "css": ".ds-btn-danger { min-height: 44px; padding: 0 16px; border: 1px solid var(--pen); border-radius: var(--radius); background: var(--sheet); color: var(--pen); font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem; cursor: pointer; transition: background 0.15s; } .ds-btn-danger:hover { background: var(--pen-tint); } .ds-btn-danger:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }"
-    },
-    {
-      "name": "Sheet (panel)",
+      "name": "Card",
       "kind": "card",
       "refersTo": "panel",
-      "description": "A sheet of the roster: tint head band with narrow-caps title and provenance badge, then content.",
-      "html": "<section class=\"ds-panel\"><div class=\"ds-panel-head\"><h2>Day sheet</h2><span class=\"ds-spacer\"></span><span class=\"ds-badge\">REPLAY · SIMULATED</span></div><p>Stress was high at <span class=\"ds-mark\">10:50</span></p></section>",
-      "css": ".ds-panel { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius); padding: 20px; color: var(--ink); font-family: var(--font-ui); } .ds-panel-head { display: flex; align-items: center; gap: 10px; margin: -20px -20px 18px; padding: 11px 20px; border-bottom: 1px solid var(--rule); background: var(--tint); border-radius: var(--radius) var(--radius) 0 0; } .ds-panel-head h2 { margin: 0; font-family: var(--font-head); font-stretch: 78%; font-weight: 650; font-size: 0.875rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-2); } .ds-spacer { flex: 1; } .ds-badge { font-family: var(--font-head); font-stretch: 78%; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.09em; padding: 3px 8px; border-radius: 2px; background: var(--replay-bg); color: var(--replay-ink); white-space: nowrap; } .ds-panel p { margin: 0; font-family: var(--font-head); font-size: 1.25rem; font-weight: 650; letter-spacing: -0.012em; line-height: 1.3; } .ds-mark { background-image: linear-gradient(var(--hl-stress), var(--hl-stress)); background-repeat: no-repeat; background-size: 100% 78%; background-position: 0 62%; padding: 0 0.22em; margin: 0 -0.08em; border-radius: 2px 7px 3px 6px; }"
+      "description": "Borderless card with a head row (title, provenance badge), one plain statement and a band chip.",
+      "html": "<section class=\"ds-card\"><div class=\"ds-card-head\"><h2>Summary, week of Sep 21</h2><span class=\"ds-card-spacer\"></span><span class=\"ds-card-badge\">SYNTHETIC</span></div><p class=\"ds-card-say\">A few things changed since last week.</p><span class=\"ds-card-chip\"><i></i>Amber</span> <span class=\"ds-card-chip\"><i class=\"ds-card-none\"></i>Not enough data</span></section>",
+      "css": ".ds-card { background: var(--sheet); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; color: var(--ink); font-family: var(--font-ui); max-width: 520px; } .ds-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; } .ds-card-head h2 { margin: 0; font-size: 1.0625rem; font-weight: 800; letter-spacing: -0.02em; } .ds-card-spacer { flex: 1; } .ds-card-badge { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.05em; padding: 5px 11px; border-radius: 99px; background: var(--synthetic-bg); color: var(--synthetic-ink); white-space: nowrap; } .ds-card-say { margin: 0 0 14px; font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.25; } .ds-card-chip { display: inline-flex; align-items: center; gap: 7px; font-size: 0.875rem; font-weight: 700; padding: 4px 11px 4px 9px; border-radius: 99px; background: var(--tint); white-space: nowrap; } .ds-card-chip i { width: 10px; height: 10px; border-radius: 50%; background: var(--warning); } .ds-card-chip i.ds-card-none { background: transparent; border: 2px dashed var(--muted); }"
     },
     {
       "name": "Provenance Badges",
       "kind": "chip",
       "refersTo": "badge-replay",
-      "description": "Every panel says where its data comes from: LIVE, REPLAY or SYNTHETIC.",
-      "html": "<span class=\"ds-pb ds-pb-live\">LIVE</span> <span class=\"ds-pb\">REPLAY</span> <span class=\"ds-pb ds-pb-syn\">SYNTHETIC</span>",
-      "css": ".ds-pb { display: inline-block; font-family: var(--font-head); font-stretch: 78%; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.09em; padding: 3px 8px; border-radius: 2px; white-space: nowrap; background: var(--replay-bg); color: var(--replay-ink); } .ds-pb-live { background: var(--live-bg); color: var(--live-ink); } .ds-pb-syn { background: var(--synthetic-bg); color: var(--synthetic-ink); }"
-    },
-    {
-      "name": "Band Chip",
-      "kind": "chip",
-      "refersTo": "band-chip",
-      "description": "Shift band as a square plus a text label; not enough data is a struck outlined box.",
-      "html": "<span class=\"ds-chip\"><span class=\"ds-dot\" style=\"background:var(--good)\"></span>Green</span> <span class=\"ds-chip\"><span class=\"ds-dot\" style=\"background:var(--warning)\"></span>Amber</span> <span class=\"ds-chip\"><span class=\"ds-dot\" style=\"background:var(--critical)\"></span>Red</span> <span class=\"ds-chip\"><span class=\"ds-dot ds-dot-none\"></span>Not enough data</span>",
-      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 7px; margin-right: 14px; font-family: var(--font-ui); font-size: 0.875rem; font-weight: 700; color: var(--ink); white-space: nowrap; } .ds-dot { width: 11px; height: 11px; border-radius: 2px; } .ds-dot-none { background: linear-gradient(to top right, transparent calc(50% - 1px), var(--muted) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)); border: 1px solid var(--muted); }"
+      "description": "Every data panel or page says where its data comes from: LIVE, REPLAY or SYNTHETIC.",
+      "html": "<span class=\"ds-pb ds-pb-live\">LIVE</span> <span class=\"ds-pb\">REPLAY · SIMULATED</span> <span class=\"ds-pb ds-pb-syn\">SYNTHETIC</span>",
+      "css": ".ds-pb { display: inline-block; font-family: var(--font-ui); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.05em; padding: 5px 11px; border-radius: 99px; white-space: nowrap; background: var(--replay-bg); color: var(--replay-ink); } .ds-pb-live { background: var(--live-bg); color: var(--live-ink); } .ds-pb-syn { background: var(--synthetic-bg); color: var(--synthetic-ink); }"
     },
     {
       "name": "Text Field",
       "kind": "input",
       "refersTo": "input",
-      "description": "Form line: rule border with an ink bottom edge.",
-      "html": "<label class=\"ds-field\">Note<input class=\"ds-input\" type=\"text\" placeholder=\"Note (optional)\"></label>",
-      "css": ".ds-field { display: block; font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem; color: var(--ink); } .ds-input { display: block; width: 100%; min-height: 46px; margin-top: 6px; padding: 10px 12px; border: 1px solid var(--rule); border-bottom-color: var(--ink); border-radius: var(--radius); background: var(--sheet); color: var(--ink); font: inherit; font-weight: 400; } .ds-input::placeholder { color: var(--muted); } .ds-input:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }"
+      "description": "Tint-ground field with a bold label above; the edge turns teal on focus.",
+      "html": "<label class=\"ds-field\">Birth year<input class=\"ds-input\" type=\"text\" placeholder=\"e.g. 1994\"></label>",
+      "css": ".ds-field { display: block; max-width: 320px; font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem; color: var(--ink); } .ds-input { display: block; width: 100%; min-height: 48px; margin-top: 6px; padding: 10px 14px; border: 1.5px solid var(--rule); border-radius: var(--radius-sm); background: var(--tint); color: var(--ink); font: inherit; font-weight: 500; transition: border-color 0.2s; } .ds-input::placeholder { color: var(--muted); } .ds-input:focus { border-color: var(--teal-bright); } .ds-input:focus-visible { outline: 3px solid var(--teal-bright); outline-offset: 2px; }"
     },
     {
-      "name": "Sidebar Navigation",
+      "name": "Icon Rail",
       "kind": "nav",
       "refersTo": "nav-item",
-      "description": "Navy shell; the active item becomes the paper of the page it opens.",
-      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-active\" href=\"#\"><svg width=\"19\" height=\"19\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2\"/></svg>My shift</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"19\" height=\"19\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"/><path d=\"M3 3v5h5\"/><path d=\"M12 7v5l4 2\"/></svg>My shifts</a></nav>",
-      "css": ".ds-nav { width: 248px; background: var(--navy); padding: 10px 0; } .ds-nav-item { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 0 22px; color: var(--navy-muted); font-family: var(--font-ui); font-size: 1rem; font-weight: 500; text-decoration: none; transition: background 0.15s, color 0.15s; } .ds-nav-item:hover { background: var(--navy-2); color: var(--navy-ink); } .ds-nav-item:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; } .ds-nav-active, .ds-nav-active:hover { background: var(--paper); color: var(--ink); font-weight: 700; }"
+      "description": "Slim navy rail: gradient logo tile, then icon tiles; the active tile glows teal.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-rail-logo\" href=\"#\" aria-label=\"WARD home\">W</a><a class=\"ds-rail-item ds-rail-active\" href=\"#\" title=\"My shift\" aria-label=\"My shift\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2\"/></svg></a><a class=\"ds-rail-item\" href=\"#\" title=\"My shifts\" aria-label=\"My shifts\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"/><path d=\"M3 3v5h5\"/><path d=\"M12 7v5l4 2\"/></svg></a></nav>",
+      "css": ".ds-rail { width: 84px; background: var(--navy); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 0 16px; border-radius: 4px; } .ds-rail-logo { width: 46px; height: 46px; border-radius: 15px; background: linear-gradient(135deg, #0b7f73, #085a51); color: #fff; font-family: var(--font-ui); font-weight: 800; font-size: 1.125rem; display: grid; place-items: center; text-decoration: none; margin-bottom: 16px; } .ds-rail-item { width: 50px; height: 50px; border-radius: 15px; color: var(--navy-muted); display: grid; place-items: center; text-decoration: none; transition: background 0.2s, color 0.2s, transform 0.15s var(--ease); } .ds-rail-item:hover { background: rgba(255, 255, 255, 0.09); color: #fff; transform: translateY(-1px); } .ds-rail-item:focus-visible, .ds-rail-logo:focus-visible { outline: 3px solid var(--teal-bright); outline-offset: 2px; } .ds-rail-active, .ds-rail-active:hover { background: rgba(79, 214, 196, 0.18); color: #5fe0cf; }"
     },
     {
-      "name": "Roster Tabs",
+      "name": "Segmented Control",
       "kind": "nav",
-      "refersTo": "tab",
-      "description": "Index tabs along an ink rule; the selected tab is ink.",
-      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab ds-tab-on\">4 West Med-Surg</button><button class=\"ds-tab\">5 East Med-Surg</button><button class=\"ds-tab\">ER</button></div>",
-      "css": ".ds-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--ink); } .ds-tab { min-height: 40px; padding: 0 14px; border: 1px solid transparent; border-bottom: none; border-radius: var(--radius) var(--radius) 0 0; background: transparent; color: var(--ink-2); font-family: var(--font-ui); font-size: 0.9375rem; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background 0.15s, color 0.15s; } .ds-tab:hover { background: var(--tint); color: var(--ink); } .ds-tab:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; } .ds-tab-on, .ds-tab-on:hover { background: var(--ink); color: var(--sheet); font-weight: 700; }"
+      "refersTo": "segmented",
+      "description": "Card-white track of segments for units, periods and filters; the chosen segment is navy.",
+      "html": "<div class=\"ds-seg\"><button class=\"ds-seg-b ds-seg-on\">4 West Med-Surg</button><button class=\"ds-seg-b\">5 East Med-Surg</button><button class=\"ds-seg-b\">ER</button><button class=\"ds-seg-b\">ICU 2</button></div>",
+      "css": ".ds-seg { display: inline-flex; gap: 4px; padding: 5px; border-radius: 18px; background: var(--sheet); box-shadow: var(--shadow); } .ds-seg-b { min-height: 40px; padding: 0 15px; border: 0; border-radius: 13px; background: transparent; color: var(--ink-2); font-family: var(--font-ui); font-size: 0.9375rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background 0.2s, color 0.2s; } .ds-seg-b:hover { color: var(--ink); } .ds-seg-b:focus-visible { outline: 3px solid var(--teal-bright); outline-offset: 2px; } .ds-seg-on, .ds-seg-on:hover { background: var(--navy); color: #fff; font-weight: 700; }"
+    },
+    {
+      "name": "Stat Card",
+      "kind": "card",
+      "refersTo": "stat-card",
+      "description": "Dot and name, a heavy figure with its unit, and a meter in the subject's colour. Lifts on hover.",
+      "html": "<div class=\"ds-stats\"><div class=\"ds-stat\"><div class=\"ds-stat-name\"><i style=\"background:var(--teal-bright)\"></i>Average load</div><div class=\"ds-stat-val\">22<small>%</small></div><div class=\"ds-stat-meter\"><b style=\"background:var(--teal-bright);transform:scaleX(0.37)\"></b></div></div><div class=\"ds-stat\"><div class=\"ds-stat-name\"><i style=\"background:var(--stress)\"></i>Stress</div><div class=\"ds-stat-val\">20<small>min</small></div><div class=\"ds-stat-meter\"><b style=\"background:var(--stress);transform:scaleX(0.33)\"></b></div></div><div class=\"ds-stat\"><div class=\"ds-stat-name\"><i style=\"background:var(--sleep)\"></i>Sleep before</div><div class=\"ds-stat-val\">5<small>h</small> 50<small>min</small></div><div class=\"ds-stat-meter\"><b style=\"background:var(--sleep);transform:scaleX(0.73)\"></b></div></div></div>",
+      "css": ".ds-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 190px)); gap: 16px; font-family: var(--font-ui); } .ds-stat { background: var(--sheet); color: var(--ink); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; transition: transform 0.25s var(--ease), box-shadow 0.25s; } .ds-stat:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); } .ds-stat-name { display: flex; align-items: center; gap: 8px; font-size: 0.875rem; font-weight: 700; color: var(--ink-2); } .ds-stat-name i { width: 9px; height: 9px; border-radius: 50%; } .ds-stat-val { font-size: 1.875rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; margin-top: 10px; font-variant-numeric: tabular-nums; } .ds-stat-val small { font-size: 0.9375rem; font-weight: 600; color: var(--ink-2); letter-spacing: 0; margin-left: 3px; } .ds-stat-meter { height: 7px; border-radius: 99px; background: var(--rule); margin-top: 14px; overflow: hidden; } .ds-stat-meter b { display: block; height: 100%; border-radius: 99px; transform-origin: left; transition: transform 0.5s var(--ease); }"
+    },
+    {
+      "name": "Highlight Chips",
+      "kind": "chip",
+      "refersTo": "highlight-chip",
+      "description": "One plain sentence each; choosing one outlines it in teal and lights that stretch of the chart.",
+      "html": "<div class=\"ds-moments\"><button class=\"ds-moment\" aria-pressed=\"false\"><i style=\"background:var(--teal-bright)\"></i>Heart working hard at 09:30</button><button class=\"ds-moment ds-moment-on\" aria-pressed=\"true\"><i style=\"background:var(--stress)\"></i>Stress was high at 10:50</button><button class=\"ds-moment\" aria-pressed=\"false\"><i style=\"background:var(--sleep)\"></i>You slept 5 h 50 min before this shift</button></div>",
+      "css": ".ds-moments { display: flex; gap: 10px; flex-wrap: wrap; } .ds-moment { min-height: 50px; padding: 0 18px; display: inline-flex; align-items: center; gap: 9px; border: 0; border-radius: 17px; background: var(--sheet); color: var(--ink); font-family: var(--font-ui); font-size: 1rem; font-weight: 700; cursor: pointer; box-shadow: var(--shadow); transition: transform 0.18s var(--ease), box-shadow 0.2s; } .ds-moment i { width: 10px; height: 10px; border-radius: 50%; flex: none; } .ds-moment:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); } .ds-moment:active { transform: scale(0.97); } .ds-moment-on { outline: 2.5px solid var(--teal-bright); } .ds-moment:focus-visible { outline: 3px solid var(--teal-bright); outline-offset: 2px; }"
+    },
+    {
+      "name": "Break Ring",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "Time since the last break as a ring that fills on arrival and refills each time it scrolls back into view. Teal on track, amber at four hours, red at five.",
+      "html": "<section class=\"ds-ringcard\"><div class=\"ds-ring-label\">Since your last break</div><div class=\"ds-ring\"><svg width=\"196\" height=\"196\" aria-hidden=\"true\"><circle cx=\"98\" cy=\"98\" r=\"90.5\" fill=\"none\" stroke=\"var(--rule)\" stroke-width=\"15\"/><circle class=\"ds-ring-arc\" cx=\"98\" cy=\"98\" r=\"90.5\" fill=\"none\" stroke=\"var(--teal-bright)\" stroke-width=\"15\" stroke-linecap=\"round\" stroke-dasharray=\"568.6\" stroke-dashoffset=\"312.7\"/></svg><div class=\"ds-ring-mid\"><b>2h 15m</b><span>of 5 hours</span></div></div><h2>On track</h2></section>",
+      "css": ".ds-ringcard { width: 340px; text-align: center; background: var(--sheet); color: var(--ink); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; font-family: var(--font-ui); } .ds-ring-label { color: var(--ink-2); font-weight: 700; } .ds-ring { position: relative; width: 196px; height: 196px; margin: 6px auto 10px; } .ds-ring svg { display: block; transform: rotate(-90deg); } .ds-ring-arc { animation: ds-ring-fill 1.1s var(--ease) both; } .ds-ringcard:hover .ds-ring-arc { animation: none; } @keyframes ds-ring-fill { from { stroke-dashoffset: 568.6; } } .ds-ring-mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; } .ds-ring-mid b { font-size: 2.125rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; } .ds-ring-mid span { color: var(--muted); font-size: 0.875rem; } .ds-ringcard h2 { margin: 0; font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; } @media (prefers-reduced-motion: reduce) { .ds-ring-arc { animation: none; } }"
+    },
+    {
+      "name": "Relief Card",
+      "kind": "card",
+      "refersTo": "relief-card",
+      "description": "The one saturated card on a page: teal gradient, a short question, and a white full-width button.",
+      "html": "<section class=\"ds-relief\"><h2>Need a break?</h2><p>Your break buddy sees your name only.</p><button class=\"ds-relief-btn\">Request relief <svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button></section>",
+      "css": ".ds-relief { position: relative; overflow: hidden; width: 340px; padding: 22px; border-radius: var(--radius); box-shadow: var(--shadow); background: linear-gradient(145deg, #0b7f73, #085a51); color: #fff; font-family: var(--font-ui); } .ds-relief::after { content: \"\"; position: absolute; width: 220px; height: 220px; border-radius: 50%; right: -70px; top: -100px; background: rgba(255, 255, 255, 0.1); pointer-events: none; } .ds-relief h2 { margin: 0; font-size: 1.375rem; font-weight: 800; letter-spacing: -0.02em; } .ds-relief p { margin: 4px 0 16px; color: #e2f4f1; } .ds-relief-btn { position: relative; z-index: 1; width: 100%; min-height: 54px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 0; border-radius: var(--radius-sm); background: #fff; color: #085a51; font-family: var(--font-ui); font-size: 1.0625rem; font-weight: 700; cursor: pointer; box-shadow: var(--shadow); transition: transform 0.18s var(--ease), box-shadow 0.2s; } .ds-relief-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); } .ds-relief-btn:active { transform: scale(0.97); } .ds-relief-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }"
     },
     {
       "name": "Week Cells",
       "kind": "custom",
       "refersTo": "week-cell",
-      "description": "The shared cell at week scale: load-ramp fill, red pen ring for an unusual week, struck box when held back.",
-      "html": "<div class=\"ds-cells\"><span class=\"ds-cell\" style=\"background:var(--load-1);color:var(--on-load-light)\">0–10</span><span class=\"ds-cell\" style=\"background:var(--load-2);color:var(--on-load-light)\">20–30<i class=\"ds-flag\"></i></span><span class=\"ds-cell\" style=\"background:var(--load-3);color:var(--on-load-light)\">40–50</span><span class=\"ds-cell ds-cell-held\"></span><span class=\"ds-cell\" style=\"background:var(--load-5);color:var(--on-load-dark)\">80</span></div>",
-      "css": ".ds-cells { display: inline-flex; border: 1px solid var(--rule); border-left-color: var(--ink); } .ds-cell { position: relative; width: 62px; height: 44px; display: flex; align-items: center; justify-content: center; border-right: 1px solid var(--rule); font-family: var(--font-head); font-weight: 650; font-size: 0.875rem; font-variant-numeric: tabular-nums; } .ds-cell:last-child { border-right: none; } .ds-cell:hover { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ink) 45%, transparent); } .ds-cell-held { background: linear-gradient(to top right, transparent calc(50% - 0.5px), var(--nodata) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)), var(--sheet); } .ds-flag { position: absolute; inset: 3px 1px; border: 2px solid var(--pen); border-radius: 50% 46% 52% 48% / 54% 50% 48% 46%; transform: rotate(-4deg); pointer-events: none; }"
+      "description": "Manager week grid cells on the load ramp: red dot for an unusual week, hollow dashed cell when held back, ink outline when selected.",
+      "html": "<div class=\"ds-cells\"><button class=\"ds-cell\" style=\"background:var(--load-1);color:var(--on-load-light)\">0–10</button><button class=\"ds-cell\" style=\"background:var(--load-2);color:var(--on-load-light)\">20–30<i class=\"ds-cell-flag\"></i></button><button class=\"ds-cell ds-cell-held\" aria-label=\"Held back\"></button><button class=\"ds-cell ds-cell-sel\" style=\"background:var(--load-3);color:var(--on-load-light)\">40–50</button><button class=\"ds-cell\" style=\"background:var(--load-5);color:var(--on-load-dark)\">80</button></div>",
+      "css": ".ds-cells { display: inline-flex; gap: 5px; padding: 6px; } .ds-cell { position: relative; width: 64px; height: 46px; padding: 0; border: 0; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-family: var(--font-ui); font-weight: 700; font-size: 0.875rem; font-variant-numeric: tabular-nums; cursor: pointer; transition: transform 0.18s var(--ease), box-shadow 0.2s; } .ds-cell:hover { transform: scale(1.08); box-shadow: var(--shadow-lift); z-index: 2; } .ds-cell:focus-visible { outline: 3px solid var(--teal-bright); outline-offset: 2px; } .ds-cell-sel { outline: 2.5px solid var(--ink); outline-offset: 1px; } .ds-cell-held { background: transparent; border: 2px dashed var(--nodata); } .ds-cell-flag { position: absolute; top: -4px; right: -4px; width: 13px; height: 13px; border-radius: 50%; background: var(--critical); border: 2.5px solid var(--sheet); }"
     }
   ],
   "narrative": {
-    "northStar": "The Shift Roster",
-    "overview": "A shift is a row on the ward roster. WARD is that paper roster made exact: hours are ruled columns, load is filled cells, and a highlighter lands on the stretch a sentence is talking about. The ground is cool roster paper, the working surfaces are white ruled sheets with near-square corners, and a committed navy shell holds the navigation. Nothing floats; everything sits on a rule.\n\nThe system is built for a glance. Each screen leads with a plain statement in a heading face (\"Stress was high at 10:50\"), and the proof sits directly beside or beneath it as marked cells. Density is moderate: one main sheet, a narrow side column, large touch targets (44px and up) for nurses. Light and dark themes both ship; dark is the same roster on a night desk, set by a `dark` class on the root element.\n\nThe user pinned teal and navy and the sidebar and page structure, and rejected two feelings outright: cold and clinical, and corporate and bland. Warmth comes from the handmade devices (highlighter marks with uneven corners, a red pen ring drawn slightly off-true), not from decoration.",
+    "northStar": "The Living Shift Chart",
+    "overview": "The shift is a chart you can explore, not a static report. WARD opens on one large card where the load line draws itself across twelve hours, a pulsing dot marks now, and plain statements beneath it light up the stretch they talk about. Everything else is a soft white card on a pale blue-grey ground: generous 22px corners, a neutral shadow that deepens when something can be pressed, and a slim navy icon rail holding the frame.\n\nThe system is built for a glance and for touch. Each surface leads with a figure or a short sentence (\"Stress was high at 10:50\", \"On track\", \"Need a break?\") set heavy in Manrope; supporting text is one line in second ink, and longer explanation sits behind a collapsed card. Controls are large (46px and up) and respond: buttons rise, cards lift, meters and bars grow from the left, the break ring refills every time it comes back into view. Light and dark both ship from the same tokens, switched by a `dark` class on the root element; dark is deep navy with brighter teal, not an inverted light theme.\n\nThe user pinned teal and navy, and rejected looks that are old, bland, cold-clinical or corporate. The earlier ruled-sheet \"shift roster\" direction was built and rejected on those grounds. Warmth here comes from softness, colour with a job, and motion that answers the hand.",
     "keyCharacteristics": [
-      "Cool paper ground, white sheets, one-pixel rules, 3px corners.",
-      "Navy shell with an active item that turns into the paper it opens.",
-      "Three highlighters with fixed jobs (teal load, amber stress, violet sleep) and a red pen for alerts.",
-      "One shared cell module: five-minute cells in the shift row, week cells in the manager grid, hour boxes in the break tally.",
-      "Missing data is a struck empty box, never a colour.",
-      "Statements in Archivo, sentences in Atkinson Hyperlegible Next; rank by weight, width, case and rule on a short scale."
+      "Pale blue-grey ground, white cards with 22px corners and soft neutral shadows; no card borders.",
+      "A slim 84px navy icon rail; the active item glows teal.",
+      "One family, Manrope, with rank carried by weight (800 for figures and headings).",
+      "Colour has fixed jobs: teal load and actions, amber stress, violet sleep and breaks, red alerts.",
+      "Missing or held-back data is a hollow dashed shape, never a colour.",
+      "Motion is part of the reading: chart draw-in, ring refill on re-entry, lift on hover, bars that grow.",
+      "Every data panel or page carries a LIVE, REPLAY or SYNTHETIC badge."
     ],
     "rules": [
-      { "name": "The Three Highlighters Rule", "body": "Teal is load, amber is stress, violet is sleep. A highlighter never changes jobs and never decorates.", "section": "colors" },
-      { "name": "The Red Pen Rule", "body": "Red appears only where something needs attention: a ring, a strike, a red band, an error. It is never a fill for ordinary data.", "section": "colors" },
-      { "name": "The Struck Box Rule", "body": "Missing or held-back data is an empty box with one diagonal stroke in `nodata`. It never takes a colour from the load ramp or the band set, and never reads as green.", "section": "colors" },
-      { "name": "The Width Is The Voice Rule", "body": "Narrow caps name a column, wide tabular digits state a quantity, normal width makes a statement. Do not introduce a second display family; change the width.", "section": "typography" },
-      { "name": "The Statement First Rule", "body": "A panel says its finding as one plain sentence in the Statement or Headline role. Explanations go behind a collapsed \"more\" section, not into small print under the figure.", "section": "typography" },
-      { "name": "The Flat Sheet Rule", "body": "Sheets, buttons and inputs carry no shadow at rest or on hover. Only things that leave the page (tooltip, drawer) cast one.", "section": "elevation" }
+      { "name": "The One Job Rule", "body": "Teal is load and action, amber is stress, violet is sleep and breaks, red is an alert. A colour never takes a second meaning and never appears as decoration.", "section": "colors" },
+      { "name": "The Hollow Dash Rule", "body": "Missing, watch-off or held-back data is an empty shape with a 2px dashed outline in `nodata` (or `muted` for the band dot). It never takes a fill from the load ramp or the band set, and never reads as green.", "section": "colors" },
+      { "name": "The Label Beside The Colour Rule", "body": "A band, a legend swatch and a chart series always sit next to their name in text. Colour alone never carries a state.", "section": "colors" },
+      { "name": "The One Family Rule", "body": "Manrope everywhere. Do not add a second display or body face; change the weight.", "section": "typography" },
+      { "name": "The Statement First Rule", "body": "A card says its finding as a figure or one short plain sentence. Explanation is one supporting line at most, or goes behind a collapsed \"more\" card; it never becomes small print under the figure.", "section": "typography" },
+      { "name": "The Badge Is The Only Caps Rule", "body": "Uppercase, letterspaced text exists only in the LIVE / REPLAY / SYNTHETIC badge. Headings, stat names and card titles are sentence case.", "section": "typography" },
+      { "name": "The Lift On Touch Rule", "body": "Things on the ground rest on the Rest shadow and rise to Lift on hover; pressing scales a button to 0.97. Things nested inside a card (segments, list rows, option and scale buttons, tinted notices) are flat and change ground or fill instead.", "section": "elevation" }
     ],
     "dos": [
-      "Do put every claim beside its proof: a statement, then the marked cells it refers to.",
-      "Do keep each highlighter to its job (teal load, amber stress, violet sleep) and red to alerts.",
-      "Do draw missing or held-back data as a struck empty box, with a text label wherever a state is named.",
-      "Do build new data displays from the shared cell on ruled tracks with an ink leading edge.",
-      "Do give every panel a provenance badge and keep the footer disclaimer on every page.",
-      "Do set quantities in wide tabular Archivo and column heads in narrow caps; write sentences in Atkinson Hyperlegible Next.",
-      "Do ship every new surface in both themes by using the tokens, never a literal colour.",
-      "Do keep nurse-facing controls at 44px or taller."
+      "Do lead every card with a figure or a short plain sentence, heavy in Manrope, with at most one supporting line.",
+      "Do keep each colour to its job: teal load and action, amber stress, violet sleep and breaks, red alerts.",
+      "Do draw missing, watch-off or held-back data as a hollow dashed shape, and name every state in text.",
+      "Do build surfaces from borderless card-white cards (22px corners, Rest shadow) on the pale ground, and let pressable things rise on hover.",
+      "Do give data a way to arrive and respond: draw the line in, grow bars and meters from the left, refill the ring on re-entry, and remove all of it under reduced motion.",
+      "Do give every data panel or page a LIVE, REPLAY or SYNTHETIC badge and keep the footer disclaimer on every page.",
+      "Do ship every surface in light and dark by using the tokens.",
+      "Do keep controls at 46px or taller, with the 3px teal focus outline."
     ],
     "donts": [
-      "Don't make it cold and clinical or corporate and bland (both rejected by the user).",
+      "Don't make it look old, bland, cold-clinical or corporate (all rejected by the user). The ruled-sheet roster look, with square corners, hairline borders and flat sheets, is the rejected direction.",
       "Don't replace a plain statement with small explanatory text; say it briefly or put it behind \"more\".",
-      "Don't change the teal and navy pairing or the sidebar and page structure; both are pinned by the user.",
-      "Don't fall back to the health-dashboard arrangement of floating metric cards, rings and line charts.",
-      "Don't add shadows to sheets, buttons or inputs, or round corners past 3px outside the toggle.",
-      "Don't show a gap as a break, or missing data in green.",
-      "Don't use a highlighter or the pen ring as decoration; each mark must point at something."
+      "Don't change the teal and navy pairing; it is pinned by the user.",
+      "Don't outline cards or stack shadows on things nested inside a card.",
+      "Don't add a second typeface, or uppercase letterspaced labels anywhere but the provenance badge.",
+      "Don't show a gap as a break, or missing data in green or any other fill.",
+      "Don't use a second saturated gradient card on a page; the relief card is the single loud surface.",
+      "Don't show a state by colour alone."
     ]
   }
 }

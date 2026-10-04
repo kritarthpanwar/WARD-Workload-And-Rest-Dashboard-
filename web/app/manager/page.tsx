@@ -443,13 +443,13 @@ function Compare({ meta, unit, scenario }: { meta: Meta; unit: string; scenario:
           <div className="row" style={{ fontSize: 14, marginBottom: 4 }}>
             <span>
               <span className="legend" style={{ display: "inline", margin: 0 }}>
-                <span className="sw" style={{ background: "var(--load-4)" }} />
+                <span className="sw" style={{ background: "var(--teal-bright)" }} />
               </span>
               <strong>A</strong> {result.labels[0]}
             </span>
             <span>
               <span className="legend" style={{ display: "inline", margin: 0 }}>
-                <span className="sw" style={{ background: "repeating-linear-gradient(135deg, var(--navy) 0 4px, var(--navy-2) 4px 6px)" }} />
+                <span className="sw" style={{ background: "var(--navy-2)" }} />
               </span>
               <strong>B</strong> {result.labels[1]}
             </span>
