@@ -38,7 +38,7 @@ Success: a nurse gets relief or a usable record without extra effort, and a unit
 
 ## Capabilities and Constraints
 
-Built: nurse live shift view drawn as a roster row, break tally, relief request and recipient view, end-of-shift questions, shift summary with green / amber / red / not-enough-data band, workload report draft, shift history, settings and withdrawal, sleep before the shift when the watch provides it, manager weekly view with heatmap, flags, comparisons and action log, committee reporting gap and access log, trustee release.
+Built: nurse live shift view with an animated load chart, break ring, relief request and recipient view, end-of-shift questions, shift summary with green / amber / red / not-enough-data band, workload report draft, shift history, settings and withdrawal, sleep before the shift when the watch provides it, manager weekly view with heatmap, flags, comparisons and action log, committee reporting gap and access log, trustee release.
 
 Hard constraints from the spec (`CONTEXT_storm`, v4):
 - Missing data is never green. A gap never counts as a break.
@@ -60,7 +60,7 @@ Not built or undecided:
 ## Brand Commitments
 
 - Product name: **WARD** (Workload And Rest Dashboard). Screens say WARD; internal code names (package, storage keys) still say "shiftload".
-- Teal and navy are kept from the team's Figma export, along with the sidebar and page structure (user, 2026-10-04). The rest of the look is the "shift roster" direction recorded in DESIGN.md.
+- Teal and navy are kept from the team's Figma export, along with the sidebar and page structure (user, 2026-10-04). The user rejected the "shift roster" look as old and bland (2026-10-04) and approved a modern, interactive style: soft rounded cards, a slim icon rail, animated charts and the break ring. DESIGN.md records it.
 - Wording stays brief and plain. The user asked for short, simple statements such as "Stress was high at 10:50" in place of explanatory small print.
 
 ## Evidence on Hand

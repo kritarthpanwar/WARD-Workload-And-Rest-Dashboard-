@@ -1,32 +1,23 @@
----
-version: 1
-slug: "web-app-nurse-page-tsx"
-primary_target: "web/app/nurse/page.tsx"
-related_targets: ["web/app/manager/page.tsx","web/app/committee/page.tsx","web/app/relief/page.tsx","web/app/trustee/page.tsx","web/app/page.tsx"]
----
-
 # Surface brief: WARD application shell and role views
 
 Scope: every signed-in view (nurse shift, history, settings; relief; manager weekly; committee; trustee) and the sign-in page. Visitor mode: Operate.
 
-Audience and job: nurses glancing mid-shift, managers and committee reading weekly unit numbers, judges following a short demo. Each screen must be understood in seconds; identity is wanted but clarity wins ties (user, 2026-10-04).
+Audience and job: nurses glancing mid-shift, managers and committee reading weekly unit numbers, judges following a short demo. Each screen must be understood in seconds.
 
-Constraints kept: teal and navy stay; sidebar and page structure stay unless something badly needs changing; no cold-clinical feel, no corporate-bland feel; brief plain statements instead of small print; every panel keeps its LIVE / REPLAY / SYNTHETIC badge and every page the not-a-medical-device footer.
+Constraints kept: teal and navy; brief plain statements instead of small print; every data panel or page carries its LIVE / REPLAY / SYNTHETIC badge; the not-a-medical-device footer on every page.
 
-Memorable moment: the shift drawn as a ruled roster row, with a highlighter mark landing on the stretch a sentence talks about.
-
-Unresolved: phone and watch notification surfaces are not designed.
+History: the "shift roster" direction (seed key e6480850) was built and then rejected by the user as old and bland. The user approved a style sample instead and asked for it across the whole site, without a play bar, and with the break ring refilling each time it scrolls back into view. That pinned direction replaces the roll.
 
 ## Direction contract
 
-THESIS: A shift is a row on the ward roster. WARD is that paper roster made exact: hours as ruled columns, load as filled cells, a highlighter over what matters. It refuses the health-dashboard arrangement of floating metric cards, rings and line charts.
+THESIS: A modern, interactive health-style dashboard: the shift is a living chart you can explore, not a static report.
 
-OWN-WORLD: Cool roster paper ground, white sheets with one-pixel navy rules and near-square corners, a committed navy shell. Three highlighters with jobs: teal for load, amber for stress, violet for sleep. Red is the pen: circles and strikes for alerts only. Archivo set narrow in caps for column heads and wide for figures; Atkinson Hyperlegible for sentences. Missing data is a struck empty cell, never a colour.
+OWN-WORLD: Pale blue-grey ground, white cards with 22px corners and soft neutral shadows, a slim navy icon rail, Manrope throughout. Teal for load and primary actions, amber for stress, violet for sleep and breaks, red for alerts. Missing data is a hollow dashed shape, never a colour.
 
-STORY: The visitor sees where the shift was heavy and whether a break happened, believes it because the marked cells sit under the sentence, and acts: ask for relief, confirm breaks, or pick a unit-week.
+STORY: The visitor sees how hard the shift is right now, taps a highlight to see where it happened on the chart, and asks for relief from a prominent card.
 
-FIRST VIEWPORT: Navy sidebar left. Heading "My shift" with date, elapsed time and data badge on one ruled line. Below, the roster row across the full sheet: hour columns 07 to 19, a load row of 144 five-minute cells, a stress row, a break row. Under it, two or three highlight sentences, each with its phrase marked. Right column: break tally of five hour-boxes and the Request relief button.
+FIRST VIEWPORT: Icon rail left. Heading with shift details, data badge and End shift. A large chart card with the current load figure and an area chart that draws itself in. Highlight chips below it. Four stat cards with meters. Right column: the break ring and a teal gradient relief card.
 
-FORM: Shift roster, position 1 on the grounded list, chosen by the user over the assigned direction. Seed key e6480850. Raises: every claim sits beside its proof (monochrome marketing); changes stay lit until handled (gate board); state carried in form as well as hue (emission rail); rank by weight, case and rule on a short scale (timetable); one shared cell module (Crouwel).
+FORM: User-pinned from an approved sample (web/public/sample.html, since removed). Signature interactions: chart draw-in and hover tooltip, highlight chips that light a stretch of the chart, the ring refilling on re-entry, cards lifting on hover.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

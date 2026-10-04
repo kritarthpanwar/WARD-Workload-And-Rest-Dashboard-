@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
 import { ROLE_ICON } from "@/components/ui";
 import { Role, saveSession } from "@/lib/api";
 
@@ -18,16 +17,13 @@ export default function Home() {
   const router = useRouter();
   return (
     <div className="signin">
-      <div className="wordmark">
-        WARD <small>workload and rest dashboard</small>
+      <div className="brand">
+        <span className="logo">W</span> WARD
       </div>
-      <h1 style={{ marginTop: 22 }}>
-        Every shift on the record: how <span className="mark">heavy</span> it was, and whether there was a{" "}
-        <span className="mark" style={{ ["--hl" as string]: "var(--hl-stress)" }}>
-          break
-        </span>
-        .
-      </h1>
+      <h1>Who are you?</h1>
+      <p className="sub" style={{ marginTop: 6 }}>
+        Every shift on the record: how heavy it was, and whether there was a break.
+      </p>
       <div className="who-list">
         {ROLES.map((r) => {
           const Icon = ROLE_ICON[r.role];
@@ -39,10 +35,11 @@ export default function Home() {
                 router.push(r.href);
               }}
             >
-              <Icon size={22} />
+              <span className="avatar">
+                <Icon size={24} />
+              </span>
               <strong>{r.title}</strong>
               <span className="what">{r.text}</span>
-              <ChevronRight size={18} />
             </button>
           );
         })}

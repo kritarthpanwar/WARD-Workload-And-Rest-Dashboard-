@@ -5,5 +5,20 @@
       "maxFindings": 5,
       "maxChars": 8000
     }
+  },
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "manrope",
+        "files": [
+          "web/public/sample.html"
+        ],
+        "createdAt": "2026-10-04T12:31:53.530Z",
+        "reason": "Agent: throwaway style sample exploring a different direction at the user's request; not part of the shipped system"
+      }
+    ]
   }
 }

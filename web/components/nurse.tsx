@@ -2,8 +2,8 @@
 
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, ChevronRight, Copy, Play, Send, ShieldCheck, Zap } from "lucide-react";
-import { Break, Roster, RosterKey, Span, Win } from "@/components/Roster";
-import { BAND_COLOR, Badge, BandChip, ErrorLine, Mode, More, PageHeading, Panel, Toggle, useRole } from "@/components/ui";
+import { Break, ShiftChart, Span, Win } from "@/components/ShiftChart";
+import { BAND_COLOR, Badge, BandChip, ErrorLine, Mode, More, PageHeading, Panel, Ring, Toggle, useRole } from "@/components/ui";
 import { fmtDay, fmtTime, hm, nurseApi } from "@/lib/api";
 
 export type Me = {
@@ -181,7 +181,7 @@ export function Today({ me }: { me: Me }) {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [card, setCard] = useState<Card | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [picked, setPicked] = useState(0);
+  const [picked, setPicked] = useState<string | null>(null);
   const autoSent = useRef<string | null>(null);
 
   const refresh = useCallback(() => {
@@ -263,10 +263,12 @@ export function Today({ me }: { me: Me }) {
 
   const m = cur.metrics;
   const since = cur.since_break_min;
-  const breakColor = since >= 300 ? "var(--critical)" : since >= 240 ? "var(--warning)" : "var(--teal)";
-  const breakWord = since >= 300 ? "Over 5 hours without a break" : since >= 240 ? "A break is due soon" : "On track";
+  const breakColor = since >= 300 ? "var(--critical)" : since >= 240 ? "var(--warning)" : "var(--teal-bright)";
+  const breakWord = since >= 300 ? "Over 5 hours — ask for relief" : since >= 240 ? "A break is due soon" : "On track";
   const lines = highlightLines(cur, shift.start_ts);
-  const active = lines[Math.min(picked, lines.length - 1)] ?? null;
+  const active = picked === null ? null : lines.find((l) => l.key === picked) ?? null;
+  const nowLoad = [...cur.windows].reverse().find((w) => w.pct_hrr !== null)?.pct_hrr ?? null;
+  const simulated = shift.data_mode === "replay" ? "simulated" : undefined;
 
   return (
     <>
@@ -274,11 +276,12 @@ export function Today({ me }: { me: Me }) {
         title="My shift"
         sub={
           <>
-            {fmtDay(shift.start_ts)} · {shift.shift_type === "day" ? "day" : "night"} shift from {fmtTime(shift.start_ts)} · <strong>{hm(cur.elapsed_min)}</strong> in
+            {me.display_name} · {fmtDay(shift.start_ts)} · {shift.shift_type === "day" ? "day" : "night"} shift from {fmtTime(shift.start_ts)} · <strong>{hm(cur.elapsed_min)}</strong> in
           </>
         }
         right={
           <>
+            <Badge mode={shift.data_mode} note={simulated} />
             <button disabled={cur.replay_running} onClick={() => nurseApi<Proposal>(`/shifts/${shift.shift_id}/propose`, {}).then(setProposal, (e) => setError(e.message))}>
               {cur.replay_running ? "Playing the recorded day…" : "End shift"} <ArrowRight size={16} />
             </button>
@@ -288,111 +291,141 @@ export function Today({ me }: { me: Me }) {
 
       <div className="split">
         <div>
-          <Panel title="Shift roster" mode={shift.data_mode} modeNote={shift.data_mode === "replay" ? "simulated" : undefined}>
-            <Roster windows={cur.windows} breaks={cur.suggested_breaks} startIso={shift.start_ts} swipe={active?.span ?? null} />
-            <RosterKey />
-            {lines.length > 0 && (
-              <ul className="highlights" style={{ marginTop: 16 }}>
-                {lines.map((l, i) => (
-                  <li key={l.key}>
-                    <button onClick={() => setPicked(i)} onMouseEnter={() => setPicked(i)} aria-pressed={active?.key === l.key}>
-                      <span>
-                        {l.before}
-                        <span className="mark" style={{ ["--hl" as string]: l.hl }}>
-                          {l.marked}
-                        </span>
-                        {l.after}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
+          <section className="panel hero-chart">
+            <div className="head">
+              <div>
+                <div className="sub" style={{ fontWeight: 700 }}>Physical load right now</div>
+                <div className="kpi">
+                  {nowLoad === null ? "—" : nowLoad.toFixed(0)}
+                  <small>% effort</small>
+                </div>
+              </div>
+              <div className="chart-legend">
+                <span>
+                  <i style={{ background: "var(--teal-bright)" }} />
+                  Load
+                </span>
+                <span>
+                  <i style={{ background: "var(--stress)" }} />
+                  Stress
+                </span>
+                <span>
+                  <i style={{ background: "var(--sleep)" }} />
+                  Break
+                </span>
+              </div>
+            </div>
+            <ShiftChart windows={cur.windows} breaks={cur.suggested_breaks} startIso={shift.start_ts} focus={active?.span ?? null} />
+          </section>
 
-          <Panel title="Day sheet" mode={shift.data_mode} modeNote={shift.data_mode === "replay" ? "simulated" : undefined}>
-            <table className="sheet-table">
-              <tbody>
-                <tr>
-                  <th scope="row">Physical load</th>
-                  <td className="val">{m.mean_pct_hrr === null ? "—" : `${m.mean_pct_hrr.toFixed(0)}%`}</td>
-                  <td>
-                    <BandChip band={cur.phys_band_so_far} label={LOAD_WORD[cur.phys_band_so_far]} />
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">Stress</th>
-                  <td className="val">{m.unexplained_hr_min} min</td>
-                  <td className="sub">high heart rate while still</td>
-                </tr>
-                <tr>
-                  <th scope="row">Sleep</th>
-                  <td className="val">{cur.sleep_before_min === null ? "—" : hm(cur.sleep_before_min)}</td>
-                  <td className="sub">{cur.sleep_before_min === null ? "no sleep data from the watch" : "before this shift"}</td>
-                </tr>
-                <tr>
-                  <th scope="row">Recorded</th>
-                  <td className="val">{m.coverage_pct.toFixed(0)}%</td>
-                  <td className="sub">of the shift so far</td>
-                </tr>
-              </tbody>
-            </table>
-          </Panel>
+          {lines.length > 0 && (
+            <div className="moments">
+              {lines.map((l) => (
+                <button key={l.key} className={active?.key === l.key ? "on" : ""} aria-pressed={active?.key === l.key} onClick={() => setPicked(picked === l.key ? null : l.key)}>
+                  <i style={{ background: l.dot }} />
+                  {l.text}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="grid-4">
+            <div className="metric">
+              <div className="name">
+                <i style={{ background: "var(--teal-bright)" }} />
+                Average load
+              </div>
+              <div className="val">
+                {m.mean_pct_hrr === null ? "—" : m.mean_pct_hrr.toFixed(0)}
+                <small>%</small>
+              </div>
+              <div className="meter">
+                <b style={{ background: "var(--teal-bright)", transform: `scaleX(${Math.min((m.mean_pct_hrr ?? 0) / 60, 1)})` }} />
+              </div>
+            </div>
+            <div className="metric">
+              <div className="name">
+                <i style={{ background: "var(--stress)" }} />
+                Stress
+              </div>
+              <div className="val">
+                {m.unexplained_hr_min}
+                <small>min</small>
+              </div>
+              <div className="meter">
+                <b style={{ background: "var(--stress)", transform: `scaleX(${Math.min(m.unexplained_hr_min / 60, 1)})` }} />
+              </div>
+            </div>
+            <div className="metric">
+              <div className="name">
+                <i style={{ background: "var(--sleep)" }} />
+                Sleep before
+              </div>
+              {cur.sleep_before_min === null ? (
+                <div className="val quiet">No sleep data</div>
+              ) : (
+                <div className="val">
+                  {Math.floor(cur.sleep_before_min / 60)}
+                  <small>h</small> {cur.sleep_before_min % 60}
+                  <small>min</small>
+                </div>
+              )}
+              <div className="meter">
+                <b style={{ background: "var(--sleep)", transform: `scaleX(${Math.min((cur.sleep_before_min ?? 0) / 480, 1)})` }} />
+              </div>
+            </div>
+            <div className="metric">
+              <div className="name">
+                <i style={{ background: "var(--muted)" }} />
+                Recorded
+              </div>
+              <div className="val">
+                {m.coverage_pct.toFixed(0)}
+                <small>%</small>
+              </div>
+              <div className="meter">
+                <b style={{ background: m.coverage_pct < 70 ? "var(--warning)" : "var(--muted)", transform: `scaleX(${m.coverage_pct / 100})` }} />
+              </div>
+            </div>
+          </div>
           <ErrorLine error={error} />
         </div>
 
         <aside>
-          <Panel title="Since last break" mode={shift.data_mode} modeNote={shift.data_mode === "replay" ? "simulated" : undefined}>
-            <div className="big-fig">
-              {Math.floor(since / 60)}
-              <small>h</small> {since % 60}
-              <small>min</small>
-            </div>
-            <div className="tally" aria-hidden>
-              {[0, 1, 2, 3, 4].map((k) => (
-                <div key={k}>
-                  <i style={{ width: `${Math.min(Math.max((since - 60 * k) / 60, 0), 1) * 100}%`, background: breakColor }} />
-                </div>
-              ))}
-            </div>
-            <div className="tally-scale" aria-hidden>
-              {[1, 2, 3, 4, 5].map((h) => (
-                <span key={h}>{h} h</span>
-              ))}
-            </div>
-            <p style={{ margin: "12px 0 0", fontWeight: 700 }}>{breakWord}</p>
-          </Panel>
+          <section className="panel ring-card">
+            <div className="sub" style={{ fontWeight: 700 }}>Since your last break</div>
+            <Ring fraction={since / 300} color={breakColor}>
+              <b>{since >= 60 ? `${Math.floor(since / 60)}h ${since % 60}m` : `${since}m`}</b>
+              <span className="muted">of 5 hours</span>
+            </Ring>
+            <h2 style={{ color: since >= 300 ? "var(--critical)" : undefined }}>{breakWord}</h2>
+          </section>
 
-          <Panel title="Relief" mode="live">
+          <section className="panel relief-card">
             {cur.relief_pending ? (
               <>
-                <h2>
-                  <span className="mark">Relief requested</span>
-                </h2>
-                <p className="sub" style={{ margin: "8px 0 0" }}>
-                  Your {recipientLabel(me.relief_recipient).toLowerCase()} has been told. They see your name only.
-                </p>
+                <h2>Help is on the way</h2>
+                <p>Your {recipientLabel(me.relief_recipient).toLowerCase()} has been told. They see your name only.</p>
               </>
             ) : (
               <>
-                <button className="primary big" onClick={requestRelief}>
+                <h2>Need a break?</h2>
+                <p>Your {recipientLabel(me.relief_recipient).toLowerCase()} sees your name only.</p>
+                <button className="big" onClick={requestRelief}>
                   Request relief <ArrowRight size={18} />
                 </button>
-                <p className="sub" style={{ margin: "10px 0 0" }}>
-                  Goes to your {recipientLabel(me.relief_recipient).toLowerCase()}. They see your name only.
-                </p>
               </>
             )}
-          </Panel>
+          </section>
         </aside>
       </div>
     </>
   );
 }
 
-type Line = { key: string; before: string; marked: string; after: string; hl: string; span: Span | null };
+type Line = { key: string; text: string; dot: string; span: Span | null };
 
-// One to four plain sentences about what stood out; each can mark its stretch on the roster.
+// One to four plain sentences about what stood out; each can light up its stretch of the chart.
 function highlightLines(cur: Current, startIso: string): Line[] {
   const at = (min: number) => fmtTime(new Date(new Date(startIso).getTime() + min * 60000).toISOString());
   const longest = (pred: (w: Win) => boolean) => {
@@ -409,17 +442,13 @@ function highlightLines(cur: Current, startIso: string): Line[] {
   const lines: Line[] = [];
   const heavy = longest((w) => (w.pct_hrr ?? 0) >= 30);
   if (heavy && heavy[1] - heavy[0] >= 10)
-    lines.push({ key: "load", before: "Your heart was working hard at ", marked: at(heavy[0]), after: "", hl: "var(--hl-load)", span: { from: heavy[0], to: heavy[1], hl: "var(--hl-load)" } });
+    lines.push({ key: "load", text: `Heart working hard at ${at(heavy[0])}`, dot: "var(--teal-bright)", span: { from: heavy[0], to: heavy[1], color: "var(--hl-load)" } });
   const stress = longest((w) => !!w.unexplained);
-  if (stress)
-    lines.push({ key: "stress", before: "Stress was high at ", marked: at(stress[0]), after: "", hl: "var(--hl-stress)", span: { from: stress[0], to: stress[1], hl: "var(--hl-stress)" } });
+  if (stress) lines.push({ key: "stress", text: `Stress was high at ${at(stress[0])}`, dot: "var(--stress)", span: { from: stress[0], to: stress[1], color: "var(--hl-stress)" } });
   if (cur.sleep_before_min !== null && cur.sleep_before_min < 360)
-    lines.push({ key: "sleep", before: "You slept ", marked: hm(cur.sleep_before_min), after: " before this shift", hl: "var(--hl-sleep)", span: null });
+    lines.push({ key: "sleep", text: `You slept ${hm(cur.sleep_before_min)} before this shift`, dot: "var(--sleep)", span: null });
   if (cur.since_break_min >= 300)
-    lines.push({
-      key: "break", before: "No break for ", marked: hm(cur.since_break_min), after: "", hl: "var(--hl-alert)",
-      span: { from: cur.elapsed_min - cur.since_break_min, to: cur.elapsed_min, hl: "var(--hl-alert)" },
-    });
+    lines.push({ key: "break", text: `No break for ${hm(cur.since_break_min)}`, dot: "var(--critical)", span: { from: cur.elapsed_min - cur.since_break_min, to: cur.elapsed_min, color: "var(--hl-alert)" } });
   return lines;
 }
 

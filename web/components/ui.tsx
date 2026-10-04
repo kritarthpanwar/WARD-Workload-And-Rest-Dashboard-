@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import {
   Activity,
   BarChart3,
@@ -15,7 +15,6 @@ import {
   ListChecks,
   LockKeyhole,
   LogOut,
-  Menu,
   Moon,
   Settings,
   ShieldCheck,
@@ -116,6 +115,45 @@ export function BandChip({ band, big, label }: { band: string | null; big?: bool
   );
 }
 
+/**
+ * Progress ring. It empties whenever it leaves the screen and fills again
+ * each time it scrolls back into view.
+ */
+export function Ring({ fraction, color, size = 196, children }: { fraction: number; color: string; size?: number; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    if (!ref.current) return;
+    const io = new IntersectionObserver(([entry]) => setSeen(entry.isIntersecting), { threshold: 0.35 });
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, []);
+  const stroke = 15;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const f = Math.min(Math.max(fraction, 0), 1);
+  return (
+    <div ref={ref} className="ring" style={{ width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }} aria-hidden>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--rule)" strokeWidth={stroke} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={seen ? c * (1 - f) : c}
+          style={{ transition: seen ? "stroke-dashoffset 1.1s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.3s" : "none" }}
+        />
+      </svg>
+      <div className="mid">{children}</div>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ shell
 
 type NavItem = { label: string; href: string; icon: LucideIcon };
@@ -187,7 +225,6 @@ export function Shell({ children }: { children: ReactNode }) {
   const session = useSession();
   const pathname = usePathname();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [hash, setHash] = useState("");
   const [dark, toggleTheme] = useTheme();
 
@@ -197,7 +234,6 @@ export function Shell({ children }: { children: ReactNode }) {
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
   }, [pathname]);
-  useEffect(() => setOpen(false), [pathname, hash]);
 
   const signedIn = !!session && pathname !== "/";
   const nav = session ? NAV[session.role] : null;
@@ -209,56 +245,46 @@ export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className={`shell ${signedIn ? "" : "signed-out"}`}>
       {signedIn && nav && session && (
-        <>
-          {open && <div className="backdrop" onClick={() => setOpen(false)} />}
-          <aside className={`sidebar ${open ? "open" : ""}`} aria-label="WARD navigation">
-            <Link href="/" className="wordmark">
-              WARD <small>workload and rest</small>
-            </Link>
-            <div className="on-as">
-              Signed in as
-              <strong>{ROLE_LABEL[session.role]}</strong>
-            </div>
-            <nav aria-label={nav.section}>
-              {nav.items.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link key={item.href} href={item.href} className={`nav-item ${isActive(item.href) ? "active" : ""}`} onClick={() => setHash(item.href.includes("#") ? `#${item.href.split("#")[1]}` : "")}>
-                    <Icon size={19} />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-            <div className="sidebar-footer">
-              <button className="nav-item" onClick={toggleTheme}>
-                {dark ? <Sun size={19} /> : <Moon size={19} />}
-                {dark ? "Light mode" : "Dark mode"}
-              </button>
-              <button
-                className="nav-item"
-                onClick={() => {
-                  saveSession(null);
-                  router.push("/");
-                }}
-              >
-                <LogOut size={19} />
-                Switch role
-              </button>
-              <div className="sidebar-note">Demo sign-in. Real sign-in is not connected yet.</div>
-            </div>
-          </aside>
-        </>
+        <aside className="sidebar" aria-label="WARD navigation">
+          <Link href="/" className="logo" title={`WARD — signed in as ${ROLE_LABEL[session.role]}`} aria-label="WARD home">
+            W
+          </Link>
+          <nav aria-label={nav.section}>
+            {nav.items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  title={item.label}
+                  aria-label={item.label}
+                  className={`nav-item ${isActive(item.href) ? "active" : ""}`}
+                  onClick={() => setHash(item.href.includes("#") ? `#${item.href.split("#")[1]}` : "")}
+                >
+                  <Icon size={22} />
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="sidebar-footer">
+            <button className="nav-item" onClick={toggleTheme} title={dark ? "Light mode" : "Dark mode"} aria-label={dark ? "Light mode" : "Dark mode"}>
+              {dark ? <Sun size={22} /> : <Moon size={22} />}
+            </button>
+            <button
+              className="nav-item"
+              title="Switch role"
+              aria-label="Switch role"
+              onClick={() => {
+                saveSession(null);
+                router.push("/");
+              }}
+            >
+              <LogOut size={22} />
+            </button>
+          </div>
+        </aside>
       )}
       <div className="workspace">
-        {signedIn && (
-          <header className="appbar">
-            <button className="icon-button" aria-label="Open navigation" onClick={() => setOpen(true)}>
-              <Menu size={22} />
-            </button>
-            <span className="wordmark">WARD</span>
-          </header>
-        )}
         {children}
         <footer className="disclaimer">Workload documentation tool — not a medical device.</footer>
       </div>

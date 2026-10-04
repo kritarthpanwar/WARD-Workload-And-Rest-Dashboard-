@@ -1,12 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Atkinson_Hyperlegible_Next } from "next/font/google";
+import { Manrope } from "next/font/google";
 import { ReactNode } from "react";
 import { Shell } from "@/components/ui";
 import "./globals.css";
 
-// Archivo carries headings, labels and figures (it has a width axis); Atkinson Hyperlegible carries sentences.
-const archivo = Archivo({ subsets: ["latin"], variable: "--font-archivo", axes: ["wdth"] });
-const body = Atkinson_Hyperlegible_Next({ subsets: ["latin"], variable: "--font-body" });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 
 export const metadata: Metadata = {
   title: "WARD",
@@ -20,7 +18,7 @@ const THEME_SCRIPT = `try{if(localStorage.getItem('shiftload-theme')==='dark')do
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${archivo.variable} ${body.variable}`} suppressHydrationWarning>
+    <html lang="en" className={manrope.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>

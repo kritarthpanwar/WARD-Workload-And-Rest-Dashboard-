@@ -130,52 +130,33 @@ export default function ManagerPage() {
         )}
       </Panel>
 
-      <Panel title="This week, and change since last week" mode="synthetic">
-        <div className="scroll-x">
-          <table className="sheet-table">
-            <thead>
-              <tr>
-                <th>Measure</th>
-                <th className="num">Days</th>
-                <th className="num">Nights</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MEASURES.map((ms) => (
-                <tr
-                  key={ms.key}
-                  className={`pick ${measure === ms.key ? "picked" : ""}`}
-                  onClick={() => setMeasure(ms.key)}
-                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setMeasure(ms.key))}
-                  tabIndex={0}
-                  aria-selected={measure === ms.key}
-                >
-                  <th scope="row" title={ms.help}>
-                    {ms.label}
-                  </th>
-                  {(["day", "night"] as const).map((s) => {
-                    const c = byKey.get(`${unit}|${week}|${s}`);
-                    const p = byKey.get(`${unit}|${addWeeks(week, -1)}|${s}`);
-                    const ok = c?.status === "released";
-                    const delta = ok && p?.status === "released" ? (c[ms.key] as number) - (p[ms.key] as number) : null;
-                    return (
-                      <td key={s} className="num">
-                        {ok ? <span className="val">{show(c, ms.key)}</span> : <span className="muted">{c ? HIDDEN_SHORT[c.status] : "No shifts"}</span>}
-                        {delta !== null && delta !== 0 && (
-                          <div className="delta" style={{ display: "flex", justifyContent: "flex-end" }}>
-                            {delta > 0 ? <TrendingUp size={15} /> : <TrendingDown size={15} />}
-                            {Math.abs(delta)} pts
-                          </div>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
+      <div className="grid-4">
+        {MEASURES.map((ms) => (
+          <button key={ms.key} className={`metric ${measure === ms.key ? "on" : ""}`} onClick={() => setMeasure(ms.key)} title={ms.help} aria-pressed={measure === ms.key}>
+            <div className="name">{ms.label}</div>
+            {(["day", "night"] as const).map((s) => {
+              const c = byKey.get(`${unit}|${week}|${s}`);
+              const p = byKey.get(`${unit}|${addWeeks(week, -1)}|${s}`);
+              const ok = c?.status === "released";
+              const delta = ok && p?.status === "released" ? (c[ms.key] as number) - (p[ms.key] as number) : null;
+              return (
+                <div key={s} style={{ marginTop: 12 }}>
+                  <div className="muted" style={{ fontWeight: 700 }}>{s === "day" ? "Days" : "Nights"}</div>
+                  <div className={ok ? "val" : "val quiet"} style={{ marginTop: 2 }}>
+                    {ok ? show(c, ms.key) : c ? HIDDEN_SHORT[c.status] : "No shifts"}
+                  </div>
+                  {delta !== null && delta !== 0 && (
+                    <div className="delta">
+                      {delta > 0 ? <TrendingUp size={15} /> : <TrendingDown size={15} />}
+                      {Math.abs(delta)} pts vs last week
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </button>
+        ))}
+      </div>
 
       <Panel title={`${m.label}, last ${meta.weeks.length} weeks`} mode="synthetic">
         <div className="pills" style={{ marginBottom: 12 }}>
@@ -216,7 +197,7 @@ export default function ManagerPage() {
           </span>
         </div>
       </Panel>
-      <More title="Why are some weeks struck out?">
+      <More title="Why are some weeks empty?">
         <p className="sub">They are held back to protect nurses, or the data is too thin.</p>
         <ul style={{ margin: 0, paddingLeft: 18 }} className="stack">
           <li><strong>Too few nurses</strong> — fewer than five contributed.</li>
