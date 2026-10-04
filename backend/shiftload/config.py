@@ -37,6 +37,9 @@ GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
 CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(",")
 COHORT_HASH_SALT = os.environ.get("COHORT_HASH_SALT", "dev-salt")
 
+# raw minutes and sleep sessions not claimed by a shift are deleted after this many days
+RAW_RETENTION_DAYS = 7
+
 # --- coverage (spec section 8)
 WINDOW_MIN = 5
 WINDOW_MIN_VALID = 4

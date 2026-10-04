@@ -114,6 +114,9 @@ class Ingest(BaseModel):
     source_device: str
     samples: list[Sample] = []
     sleep: list[SleepSession] = []      # optional: only when the watch records sleep
+    # daily uploads name the stretch they cover; sending it again replaces it instead of adding to it
+    window_start: datetime | None = None
+    window_end: datetime | None = None
 
 
 @app.get("/health")
@@ -265,17 +268,14 @@ def shift_start(body: ShiftStart, user: User = Depends(nurse_only)):
         return {"shift_id": create_shift(conn, n, start, "live", None)}
 
 
-class RecordedShift(BaseModel):
-    start_ts: datetime
-    end_ts: datetime
-    source_device: str
-    samples: list[Sample] = []
-    sleep: list[SleepSession] = []
+class ClockedShift(BaseModel):
+    start_ts: datetime      # clock-in
+    end_ts: datetime        # clock-out
 
 
-@app.post("/shifts/record")
-def shift_record(body: RecordedShift, user: User = Depends(nurse_only)):
-    """Upload a finished shift from the watch in one go. The nurse then reviews it on the site."""
+@app.post("/shifts/clock")
+def shift_clock(body: ClockedShift, user: User = Depends(nurse_only)):
+    """The nurse enters clock-in and clock-out; the shift is built from data the phone already uploaded."""
     start, end = pipeline.floor_minute(body.start_ts), pipeline.floor_minute(body.end_ts)
     hours = (end - start).total_seconds() / 3600
     if not 1 <= hours <= 16:
@@ -285,31 +285,27 @@ def shift_record(body: RecordedShift, user: User = Depends(nurse_only)):
     with pool.connection() as conn:
         n = get_nurse(conn, user)
         pid = n["nurse_pid"]
-        if n["paused_until"] and n["paused_until"] > datetime.now(timezone.utc):
-            raise HTTPException(409, "recording is paused")
         if conn.execute("SELECT 1 FROM core.shifts WHERE nurse_pid = %s AND finalized AND start_ts < %s AND end_ts > %s",
                         (pid, end, start)).fetchone():
             raise HTTPException(409, "a finished shift already covers this time")
-        # sending the same shift again replaces the earlier upload
+        have = conn.execute("SELECT count(*) AS n FROM core.minutes WHERE nurse_pid = %s AND ts >= %s AND ts < %s AND hr_n > 0",
+                            (pid, start, end)).fetchone()["n"]
+        if have == 0:
+            raise HTTPException(409, "no watch data has been uploaded for that time yet")
+        # entering the times again replaces an unfinished earlier attempt
         conn.execute("DELETE FROM core.break_events WHERE shift_id IN (SELECT shift_id FROM core.shifts WHERE nurse_pid = %s AND NOT finalized)", (pid,))
+        conn.execute("DELETE FROM core.windows WHERE shift_id IN (SELECT shift_id FROM core.shifts WHERE nurse_pid = %s AND NOT finalized)", (pid,))
         conn.execute("DELETE FROM core.shifts WHERE nurse_pid = %s AND NOT finalized", (pid,))
-        conn.execute("DELETE FROM core.minutes WHERE nurse_pid = %s", (pid,))
-        conn.execute("DELETE FROM core.windows WHERE nurse_pid = %s", (pid,))
-        resting = [s.value for s in body.samples if s.type == "resting_hr"]
-        if resting and n["hr_rest"] is None:
-            n["hr_rest"] = statistics.median(resting)
-            conn.execute("UPDATE core.nurses SET hr_rest = %s WHERE nurse_pid = %s", (n["hr_rest"], pid))
-        if body.sleep:
-            pipeline.store_sleep(conn, pid, [s.model_dump() for s in body.sleep], body.source_device)
         shift_id = str(uuid.uuid4())
+        device = conn.execute("SELECT source_device FROM core.sleep_sessions WHERE nurse_pid = %s LIMIT 1", (pid,)).fetchone()
         conn.execute(
             """INSERT INTO core.shifts (shift_id, nurse_pid, unit_id, start_ts, planned_end_ts, shift_type,
                    source_device, data_mode) VALUES (%s, %s, %s, %s, %s, %s, %s, 'recorded')""",
-            (shift_id, pid, n["unit_id"], start, end, pipeline.shift_type_for(start), body.source_device))
-        inside = [s.model_dump() for s in body.samples if s.type != "resting_hr" and start <= s.ts < end]
-        do_ingest(conn, n, inside, body.source_device)
-        heart = sum(1 for s in inside if s["type"] == "hr")
-    return {"shift_id": shift_id, "heart_rate_readings": heart, "minutes": int(hours * 60)}
+            (shift_id, pid, n["unit_id"], start, end, pipeline.shift_type_for(start), device["source_device"] if device else None))
+        shift = active_shift(conn, pid)
+        c = pipeline.compute(conn, n, shift, end)
+        pipeline.write_windows(conn, pid, shift, c["windows"])
+    return {"shift_id": shift_id, "minutes_with_data": have, "minutes": int(hours * 60)}
 
 
 @app.post("/shifts/{shift_id}/correct")
@@ -349,10 +345,20 @@ def ingest(body: Ingest, user: User = Depends(nurse_only)):
             n["hr_rest"] = statistics.median(resting)
             conn.execute("UPDATE core.nurses SET hr_rest = %s WHERE nurse_pid = %s",
                          (n["hr_rest"], n["nurse_pid"]))
+        if n["paused_until"] and n["paused_until"] > datetime.now(timezone.utc):
+            raise HTTPException(409, "recording is paused")
+        pid = n["nurse_pid"]
+        if body.window_start and body.window_end:
+            conn.execute("DELETE FROM core.minutes WHERE nurse_pid = %s AND ts >= %s AND ts < %s",
+                         (pid, pipeline.floor_minute(body.window_start), body.window_end))
         if body.sleep:
-            pipeline.store_sleep(conn, n["nurse_pid"], [s.model_dump() for s in body.sleep], body.source_device)
+            pipeline.store_sleep(conn, pid, [s.model_dump() for s in body.sleep], body.source_device)
         if body.samples:
             do_ingest(conn, n, [s.model_dump() for s in body.samples], body.source_device)
+        # raw data that no shift has claimed does not stay: it is dropped after a week
+        cutoff = datetime.now(timezone.utc) - timedelta(days=config.RAW_RETENTION_DAYS)
+        conn.execute("DELETE FROM core.minutes WHERE nurse_pid = %s AND ts < %s", (pid, cutoff))
+        conn.execute("DELETE FROM core.sleep_sessions WHERE nurse_pid = %s AND end_ts < %s", (pid, cutoff))
     return {"accepted": len(body.samples), "sleep_sessions": len(body.sleep)}
 
 

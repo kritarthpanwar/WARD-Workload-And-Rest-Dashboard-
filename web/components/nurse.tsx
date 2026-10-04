@@ -188,21 +188,21 @@ export function Today({ me }: { me: Me }) {
             </button>
           </div>
         ) : (
-          <Panel className="empty">
-            <h2>No shift running</h2>
-            <p className="sub" style={{ margin: "6px auto 20px" }}>
-              Play back a recorded day to see how it works.
-            </p>
-            <div className="row">
-              <button className="primary" onClick={() => startReplay(8)}>
-                <Play size={17} /> Play a recorded day
-              </button>
-              <button onClick={() => startReplay(60)}>
-                <Zap size={17} /> Play it fast
-              </button>
-            </div>
-            <ErrorLine error={error} />
-          </Panel>
+          <div className="grid-2">
+            <AddShift onSaved={refresh} />
+            <Panel title="Demo" mode="replay" modeNote="simulated">
+              <p className="sub">No watch data yet? Play back a simulated day.</p>
+              <div className="row">
+                <button className="primary" onClick={() => startReplay(8)}>
+                  <Play size={17} /> Play a recorded day
+                </button>
+                <button onClick={() => startReplay(60)}>
+                  <Zap size={17} /> Play it fast
+                </button>
+              </div>
+              <ErrorLine error={error} />
+            </Panel>
+          </div>
         )}
       </>
     );
@@ -371,6 +371,53 @@ export function Today({ me }: { me: Me }) {
 }
 
 type Line = { key: string; text: string; dot: string; span: Span | null };
+
+// Clock-in and clock-out turn a stretch of uploaded watch data into a shift.
+function AddShift({ onSaved }: { onSaved: () => void }) {
+  const today = new Date();
+  const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const [date, setDate] = useState(iso(today));
+  const [clockIn, setClockIn] = useState("07:00");
+  const [clockOut, setClockOut] = useState("19:00");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = () => {
+    const start = new Date(`${date}T${clockIn}`);
+    const end = new Date(`${date}T${clockOut}`);
+    if (end <= start) end.setDate(end.getDate() + 1); // the shift ran past midnight
+    setBusy(true);
+    setError(null);
+    nurseApi("/shifts/clock", { start_ts: start.toISOString(), end_ts: end.toISOString() })
+      .then(onSaved, (e) => setError(e.message[0].toUpperCase() + e.message.slice(1) + "."))
+      .finally(() => setBusy(false));
+  };
+
+  return (
+    <Panel title="Add a shift">
+      <div className="stack">
+        <label className="field">
+          Date
+          <input type="date" value={date} max={iso(today)} onChange={(e) => setDate(e.target.value)} />
+        </label>
+        <div className="row" style={{ alignItems: "flex-end" }}>
+          <label className="field" style={{ flex: 1 }}>
+            Clock in
+            <input type="time" value={clockIn} onChange={(e) => setClockIn(e.target.value)} />
+          </label>
+          <label className="field" style={{ flex: 1 }}>
+            Clock out
+            <input type="time" value={clockOut} onChange={(e) => setClockOut(e.target.value)} />
+          </label>
+        </div>
+        <ErrorLine error={error} />
+        <button className="primary big" disabled={busy || !date || !clockIn || !clockOut} onClick={save}>
+          {busy ? "Saving…" : "Save this shift"} <ArrowRight size={18} />
+        </button>
+      </div>
+    </Panel>
+  );
+}
 
 // One to four plain sentences about what stood out; each can light up its stretch of the chart.
 function highlightLines(cur: Current, startIso: string): Line[] {

@@ -173,11 +173,12 @@ def finalize(conn, nurse: dict, shift: dict, end: datetime, confirmed: list[tupl
          shift["shift_id"]),
     )
     # raw data does not outlive the shift
-    conn.execute("DELETE FROM core.minutes WHERE nurse_pid = %s AND ts < %s", (nurse["nurse_pid"], end))
+    conn.execute("DELETE FROM core.minutes WHERE nurse_pid = %s AND ts >= %s AND ts < %s",
+                 (nurse["nurse_pid"], shift["start_ts"], end))
     conn.execute("DELETE FROM core.windows WHERE shift_id = %s", (shift["shift_id"],))
     # sleep before this shift is now summarised on the shift row
-    conn.execute("DELETE FROM core.sleep_sessions WHERE nurse_pid = %s AND end_ts <= %s",
-                 (nurse["nurse_pid"], shift["start_ts"]))
+    conn.execute("DELETE FROM core.sleep_sessions WHERE nurse_pid = %s AND end_ts <= %s AND end_ts > %s",
+                 (nurse["nurse_pid"], shift["start_ts"], shift["start_ts"] - timedelta(hours=24)))
     n_done = conn.execute(
         "SELECT count(*) AS n FROM core.shifts WHERE nurse_pid = %s AND finalized", (nurse["nurse_pid"],)
     ).fetchone()["n"]
