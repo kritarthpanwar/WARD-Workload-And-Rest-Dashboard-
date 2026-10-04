@@ -21,6 +21,7 @@ Nurse workload documentation tool for StormHack. The full spec is
     backend/scripts/            reset_db, seed, make_replay_day, eval_anomaly
     backend/tests/              pytest
     web/                        Next.js (port 3000)
+    android/                    Android app: daily Health Connect upload + clock in/out
 
 ## Hard rules (from the spec, section 3)
 

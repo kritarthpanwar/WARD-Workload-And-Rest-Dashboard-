@@ -31,8 +31,10 @@ Success: a nurse gets relief or a usable record without extra effort, and a unit
 
 ## Operating Context
 
-- Data comes from a wearable (watch for the prototype, upper-arm band for deployment) through the phone. Live data was dropped as not feasible (user, 2026-10-04): the Android app reads a finished shift from Health Connect and uploads it in one go, and the nurse reviews it on the site afterwards. The site can also replay a simulated recorded day.
-- Because nothing arrives during the shift, there is no automatic five-hour break alert. Requesting relief is a manual button.
+- Data comes from a wearable (watch for the prototype, upper-arm band for deployment) through the phone. Nothing is tracked live (user, 2026-10-04). The Android app reads Health Connect and uploads heart rate, steps, resting heart rate and sleep once a day at a time the nurse sets, or on demand.
+- A nurse enters clock-in and clock-out times, in the app or on the site, and the shift is built from the uploaded data for that stretch. They then review it on the site.
+- There is no in-shift break alert and no relief request: both were removed with live data.
+- Uploaded raw data that no shift claims is deleted after seven days. The site can also replay a simulated recorded day.
 - Nurses confirm breaks once, at end of shift. Shift times default from their rotation.
 - Managers get fixed calendar weeks only. A trustee runs the weekly release.
 - The demo runs on a synthetic cohort of four units over twelve weeks.
