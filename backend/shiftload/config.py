@@ -28,8 +28,10 @@ PUBLISHED_DB_URL = os.environ.get(
     "PUBLISHED_DB_URL", f"postgresql://published_ro:published_ro_dev@{_HOST}"
 )
 
-# "dev" accepts tokens of the form dev:<role>:<uid>. Firebase is not wired yet.
+# "dev" accepts demo tokens of the form dev:<role>:<uid>; "firebase" accepts only
+# verified Firebase sign-ins; "both" accepts either (for demos).
 AUTH_MODE = os.environ.get("AUTH_MODE", "dev")
+FIREBASE_PROJECT_ID = os.environ.get("FIREBASE_PROJECT_ID", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
 CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(",")

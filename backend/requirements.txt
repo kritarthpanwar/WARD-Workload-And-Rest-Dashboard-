@@ -7,3 +7,5 @@ httpx
 pydantic
 tzdata
 pytest
+google-auth
+requests

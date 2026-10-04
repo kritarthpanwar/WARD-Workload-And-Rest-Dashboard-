@@ -588,6 +588,7 @@ button.link:hover:not(:disabled) {
 
 select,
 input[type="text"],
+input[type="password"],
 input[type="number"],
 textarea {
   display: block;

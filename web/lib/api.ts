@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { auth } from "@/lib/firebase";
 
 export const NURSE_API = process.env.NEXT_PUBLIC_NURSE_API ?? "http://localhost:8001";
 export const MANAGER_API = process.env.NEXT_PUBLIC_MANAGER_API ?? "http://localhost:8002";
 
 export type Role = "nurse" | "charge_nurse" | "manager" | "joint_committee" | "admin";
-export type Session = { role: Role; uid: string };
+export type Session = { role: Role; uid: string; kind?: "demo" | "firebase" };
 
 const KEY = "shiftload.session";
 
@@ -37,10 +38,16 @@ export function useSession(): Session | null | undefined {
   return session;
 }
 
-// Dev sign-in only: the token names the role. Firebase Auth replaces this.
-export function authHeader(): Record<string, string> {
+/** Demo logins send a token that names the role; real logins send a Firebase ID token. */
+export async function authHeader(): Promise<Record<string, string>> {
   const s = readSession();
-  return s ? { Authorization: `Bearer dev:${s.role}:${s.uid}` } : {};
+  if (!s) return {};
+  if (s.kind === "firebase") {
+    await auth.authStateReady();
+    const token = await auth.currentUser?.getIdToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+  return { Authorization: `Bearer dev:${s.role}:${s.uid}` };
 }
 
 export class ApiError extends Error {
@@ -56,7 +63,7 @@ export async function api<T>(base: string, path: string, body?: unknown, method?
   try {
     res = await fetch(base + path, {
       method: method ?? (body === undefined ? "GET" : "POST"),
-      headers: { ...authHeader(), ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
+      headers: { ...(await authHeader()), ...(body === undefined ? {} : { "Content-Type": "application/json" }) },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {

@@ -272,6 +272,17 @@ CREATE TABLE audit.access_log (
   params_hash text NOT NULL
 );
 
+-- Who may sign in as what. One row per Firebase account, created on first
+-- sign-in with no role; scripts/set_role.py assigns the role afterwards.
+CREATE TABLE audit.user_roles (
+  firebase_uid text PRIMARY KEY,
+  email        text NOT NULL,
+  role         text,                 -- NULL until an admin assigns one
+  unit_id      text,                 -- nurses only
+  display_name text,                 -- nurses only
+  created_at   timestamptz NOT NULL DEFAULT now()
+);
+
 -- --------------------------------------------------------------- grants
 
 REVOKE ALL ON SCHEMA core, published, audit FROM PUBLIC;
@@ -292,3 +303,5 @@ GRANT USAGE ON SCHEMA audit TO app_rw, release, published_ro;
 GRANT INSERT ON audit.access_log TO app_rw, release, published_ro;
 GRANT USAGE ON SEQUENCE audit.access_log_id_seq TO app_rw, release, published_ro;
 GRANT SELECT ON audit.access_log TO published_ro;
+GRANT SELECT ON audit.user_roles TO app_rw, published_ro;
+GRANT INSERT ON audit.user_roles TO app_rw;

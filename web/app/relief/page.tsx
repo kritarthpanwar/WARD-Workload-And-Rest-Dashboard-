@@ -21,7 +21,7 @@ export default function ReliefPage() {
     (async () => {
       while (!stopped) {
         try {
-          const res = await fetch(`${NURSE_API}/relief/stream`, { headers: authHeader(), signal: ctl.signal });
+          const res = await fetch(`${NURSE_API}/relief/stream`, { headers: await authHeader(), signal: ctl.signal });
           if (!res.ok || !res.body) throw new Error(`stream failed (${res.status})`);
           setError(null);
           const reader = res.body.getReader();

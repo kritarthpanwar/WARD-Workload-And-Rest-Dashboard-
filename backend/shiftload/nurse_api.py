@@ -13,13 +13,13 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Literal
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from . import config, metrics, pipeline, release
-from .common import User, make_app, make_pool, require
+from .common import User, bearer, make_app, make_pool, require, verify_firebase
 from .synthetic import TZ
 
 pool = make_pool(config.APP_DB_URL)
@@ -117,6 +117,28 @@ class Ingest(BaseModel):
 @app.get("/health")
 def health():
     return {"ok": True}
+
+
+@app.post("/session")
+def session(request: Request):
+    """Called right after a Firebase sign-in: records the account and returns its role."""
+    claims = verify_firebase(bearer(request.headers.get("authorization")))
+    uid, email = claims["user_id"], claims.get("email", "").lower()
+    with pool.connection() as conn:
+        conn.execute(
+            "INSERT INTO audit.user_roles (firebase_uid, email) VALUES (%s, %s) ON CONFLICT (firebase_uid) DO NOTHING",
+            (uid, email))
+        row = conn.execute("SELECT role, unit_id, display_name FROM audit.user_roles WHERE firebase_uid = %s", (uid,)).fetchone()
+        # a nurse's pseudonymous record is created the first time they sign in with the role
+        if row["role"] == "nurse" and not conn.execute(
+                "SELECT 1 FROM core.nurse_identity WHERE firebase_uid = %s", (uid,)).fetchone():
+            if not row["unit_id"]:
+                raise HTTPException(409, "this nurse account has no unit yet")
+            pid = str(uuid.uuid4())
+            conn.execute("INSERT INTO core.nurse_identity (firebase_uid, nurse_pid, display_name) VALUES (%s, %s, %s)",
+                         (uid, pid, row["display_name"] or email.split("@")[0]))
+            conn.execute("INSERT INTO core.nurses (nurse_pid, unit_id) VALUES (%s, %s)", (pid, row["unit_id"]))
+    return {"uid": uid, "email": email, "role": row["role"]}
 
 
 @app.get("/me")

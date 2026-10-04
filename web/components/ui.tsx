@@ -23,7 +23,9 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { signOut } from "firebase/auth";
 import { Role, saveSession, useSession } from "@/lib/api";
+import { auth } from "@/lib/firebase";
 
 export type Mode = "live" | "replay" | "synthetic";
 
@@ -272,9 +274,10 @@ export function Shell({ children }: { children: ReactNode }) {
             </button>
             <button
               className="nav-item"
-              title="Switch role"
-              aria-label="Switch role"
+              title="Sign out"
+              aria-label="Sign out"
               onClick={() => {
+                signOut(auth).catch(() => undefined);
                 saveSession(null);
                 router.push("/");
               }}
