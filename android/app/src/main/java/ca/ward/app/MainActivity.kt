@@ -99,7 +99,7 @@ internal fun BigButton(text: String, enabled: Boolean = true, onClick: () -> Uni
 @Composable
 private fun SignIn(prefs: Prefs, done: () -> Unit) {
     val scope = rememberCoroutineScope()
-    var server by remember { mutableStateOf(prefs.serverUrl.ifEmpty { "http://" }) }
+    var server by remember { mutableStateOf(prefs.serverUrl.ifEmpty { "https://ward-nurse-api.onrender.com" }) }
     var email by remember { mutableStateOf(prefs.email.takeIf { it != Api.DEMO_NAME } ?: "") }
     var password by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
