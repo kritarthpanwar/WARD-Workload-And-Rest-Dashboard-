@@ -113,12 +113,12 @@ object Sync {
 
     /** Clock-in and clock-out: make sure the data is on the server, then ask it to build the shift. */
     suspend fun saveShift(context: Context, start: Instant, end: Instant): String {
-        upload(context)
+        if (!Prefs(context).demo) upload(context)      // the demo login has no watch
         val saved = withContext(Dispatchers.IO) {
             Api(Prefs(context)).post("/shifts/clock", JSONObject().put("start_ts", start.toString()).put("end_ts", end.toString()))
         }
-        return if (saved.optBoolean("simulated")) "Demo shift saved with simulated data. Open WARD in a browser to review it."
-        else "Shift saved. Open WARD in a browser to review it."
+        return if (saved.optBoolean("simulated")) "Demo shift saved with simulated data."
+        else "Shift saved."
     }
 
     /** Run the upload once a day at about the chosen hour. Android may shift it a little to save battery. */

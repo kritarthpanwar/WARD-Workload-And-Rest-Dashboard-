@@ -52,9 +52,9 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 
-private val Teal = Color(0xFF0B7F73)
-private val Ink = Color(0xFF0F2233)
-private val Ground = Color(0xFFF3F6FB)
+internal val Teal = Color(0xFF0B7F73)
+internal val Ink = Color(0xFF0F2233)
+internal val Ground = Color(0xFFF3F6FB)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,14 +83,14 @@ private fun App() {
 }
 
 @Composable
-private fun Sheet(content: @Composable () -> Unit) {
+internal fun Sheet(content: @Composable () -> Unit) {
     Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Color.White)) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { content() }
     }
 }
 
 @Composable
-private fun BigButton(text: String, enabled: Boolean = true, onClick: () -> Unit) {
+internal fun BigButton(text: String, enabled: Boolean = true, onClick: () -> Unit) {
     Button(onClick, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = RoundedCornerShape(14.dp), colors = ButtonDefaults.buttonColors(containerColor = Teal)) {
         Text(text, fontSize = 17.sp, fontWeight = FontWeight.Bold)
     }
@@ -154,7 +154,7 @@ private fun SignIn(prefs: Prefs, done: () -> Unit) {
 }
 
 @Composable
-private fun Choice(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+internal fun Choice(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         options.forEachIndexed { i, label ->
             val on = i == selected
@@ -162,8 +162,9 @@ private fun Choice(options: List<String>, selected: Int, onSelect: (Int) -> Unit
                 onClick = { onSelect(i) },
                 modifier = Modifier.weight(1f).heightIn(min = 50.dp),
                 shape = RoundedCornerShape(14.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp),
                 colors = ButtonDefaults.outlinedButtonColors(containerColor = if (on) Ink else Color.Transparent, contentColor = if (on) Color.White else Ink),
-            ) { Text(label, fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+            ) { Text(label, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1) }
         }
     }
 }
@@ -176,6 +177,8 @@ private fun Home(prefs: Prefs, signedOut: () -> Unit) {
     var uploadStatus by remember { mutableStateOf(prefs.lastUpload) }
     var shiftStatus by remember { mutableStateOf("") }
     var demoStatus by remember { mutableStateOf("") }
+    var tab by remember { mutableStateOf(0) }
+    var reload by remember { mutableStateOf(0) }      // bumped when a shift is saved or a demo day starts
     var busy by remember { mutableStateOf(false) }
     var hour by remember { mutableStateOf(prefs.uploadHour) }
     var day by remember { mutableStateOf(0) }       // 0 = today, 1 = yesterday
@@ -206,66 +209,79 @@ private fun Home(prefs: Prefs, signedOut: () -> Unit) {
         }
     }
 
-    Sheet {
-        Text("Daily upload", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        when {
-            !available -> Text("Health Connect isn't available on this phone. Install or update it from the Play Store.", fontSize = 16.sp)
-            !allowed -> {
-                Text("WARD needs to read heart rate, steps, resting heart rate and sleep from Health Connect.", fontSize = 16.sp)
-                BigButton("Allow access") { askHealth.launch(Sync.PERMISSIONS + Sync.BACKGROUND) }
-            }
-            else -> {
-                Text(uploadStatus, fontSize = 16.sp)
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Every day at", fontSize = 17.sp, modifier = Modifier.weight(1f))
-                    OutlinedButton(onClick = { hour = (hour + 23) % 24; prefs.uploadHour = hour; Sync.scheduleDaily(context) }, shape = RoundedCornerShape(14.dp)) { Text("−", fontSize = 20.sp) }
-                    Text("%02d:00".format(hour), fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    OutlinedButton(onClick = { hour = (hour + 1) % 24; prefs.uploadHour = hour; Sync.scheduleDaily(context) }, shape = RoundedCornerShape(14.dp)) { Text("+", fontSize = 20.sp) }
+    Choice(listOf("My shift", "My shifts", "Upload"), tab) { tab = it }
+
+    when (tab) {
+        0 -> ShiftTab(prefs, reload) {
+            Text("My shift", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+            if (!prefs.demo && !(available && allowed)) Text("Allow Health Connect access on the Upload tab to add a shift from your watch.", fontSize = 16.sp)
+            if (prefs.demo || (available && allowed)) Sheet {
+                Text("Add a shift", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Choice(listOf("Today", "Yesterday"), day) { day = it }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(clockIn, { clockIn = it }, label = { Text("Clock in") }, singleLine = true, modifier = Modifier.weight(1f))
+                    OutlinedTextField(clockOut, { clockOut = it }, label = { Text("Clock out") }, singleLine = true, modifier = Modifier.weight(1f))
                 }
-                BigButton(if (busy) "Working…" else "Upload now", enabled = !busy) {
-                    run({ uploadStatus = it }, "Reading the watch data…") { Sync.upload(context) }
+                BigButton(if (busy) "Working…" else "Save this shift", enabled = !busy) {
+                    run({ shiftStatus = it }, "Saving…") {
+                        val tIn = try { LocalTime.parse(clockIn.trim()) } catch (e: Exception) { throw ApiError("Write the times like 07:00 and 19:30.") }
+                        val tOut = try { LocalTime.parse(clockOut.trim()) } catch (e: Exception) { throw ApiError("Write the times like 07:00 and 19:30.") }
+                        val date = LocalDate.now().minusDays(day.toLong())
+                        val zone = ZoneId.systemDefault()
+                        val start = date.atTime(tIn).atZone(zone).toInstant()
+                        // a clock-out earlier than the clock-in means the shift ran past midnight
+                        val endDate = if (tOut.isAfter(tIn)) date else date.plusDays(1)
+                        Sync.saveShift(context, start, endDate.atTime(tOut).atZone(zone).toInstant()).also { reload++ }
+                    }
+                }
+                if (shiftStatus.isNotEmpty()) Text(shiftStatus, fontSize = 16.sp)
+            }
+
+            Sheet {
+                Text("Demo", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text("No watch data yet? Play back a simulated day.", fontSize = 16.sp)
+                fun play(speed: Int) = run({ demoStatus = it }, "Starting…") {
+                    withContext(Dispatchers.IO) { Api(prefs).post("/replay/start", JSONObject().put("speed", speed)) }
+                    reload++
+                    "Playing a simulated day."
+                }
+                BigButton("Play a recorded day", enabled = !busy) { play(8) }
+                OutlinedButton(onClick = { play(60) }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = RoundedCornerShape(14.dp)) {
+                    Text("Play it fast", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Ink)
+                }
+                if (demoStatus.isNotEmpty()) Text(demoStatus, fontSize = 16.sp)
+            }
+
+        }
+        1 -> HistoryTab(prefs)
+        else -> {
+            Sheet {
+                Text("Daily upload", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                when {
+                    !available -> Text("Health Connect isn't available on this phone. Install or update it from the Play Store.", fontSize = 16.sp)
+                    !allowed -> {
+                        Text("WARD needs to read heart rate, steps, resting heart rate and sleep from Health Connect.", fontSize = 16.sp)
+                        BigButton("Allow access") { askHealth.launch(Sync.PERMISSIONS + Sync.BACKGROUND) }
+                    }
+                    else -> {
+                        Text(uploadStatus, fontSize = 16.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text("Every day at", fontSize = 17.sp, modifier = Modifier.weight(1f))
+                            OutlinedButton(onClick = { hour = (hour + 23) % 24; prefs.uploadHour = hour; Sync.scheduleDaily(context) }, shape = RoundedCornerShape(14.dp)) { Text("−", fontSize = 20.sp) }
+                            Text("%02d:00".format(hour), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            OutlinedButton(onClick = { hour = (hour + 1) % 24; prefs.uploadHour = hour; Sync.scheduleDaily(context) }, shape = RoundedCornerShape(14.dp)) { Text("+", fontSize = 20.sp) }
+                        }
+                        BigButton(if (busy) "Working…" else "Upload now", enabled = !busy) {
+                            run({ uploadStatus = it }, "Reading the watch data…") { Sync.upload(context) }
+                        }
+                    }
                 }
             }
+
         }
     }
 
-    if (available && allowed) Sheet {
-        Text("Add a shift", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Choice(listOf("Today", "Yesterday"), day) { day = it }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(clockIn, { clockIn = it }, label = { Text("Clock in") }, singleLine = true, modifier = Modifier.weight(1f))
-            OutlinedTextField(clockOut, { clockOut = it }, label = { Text("Clock out") }, singleLine = true, modifier = Modifier.weight(1f))
-        }
-        BigButton(if (busy) "Working…" else "Save this shift", enabled = !busy) {
-            run({ shiftStatus = it }, "Saving…") {
-                val tIn = try { LocalTime.parse(clockIn.trim()) } catch (e: Exception) { throw ApiError("Write the times like 07:00 and 19:30.") }
-                val tOut = try { LocalTime.parse(clockOut.trim()) } catch (e: Exception) { throw ApiError("Write the times like 07:00 and 19:30.") }
-                val date = LocalDate.now().minusDays(day.toLong())
-                val zone = ZoneId.systemDefault()
-                val start = date.atTime(tIn).atZone(zone).toInstant()
-                // a clock-out earlier than the clock-in means the shift ran past midnight
-                val endDate = if (tOut.isAfter(tIn)) date else date.plusDays(1)
-                Sync.saveShift(context, start, endDate.atTime(tOut).atZone(zone).toInstant())
-            }
-        }
-        if (shiftStatus.isNotEmpty()) Text(shiftStatus, fontSize = 16.sp)
-    }
-
-    Sheet {
-        Text("Demo", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Text("No watch data yet? Play back a simulated day.", fontSize = 16.sp)
-        fun play(speed: Int) = run({ demoStatus = it }, "Starting…") {
-            withContext(Dispatchers.IO) { Api(prefs).post("/replay/start", JSONObject().put("speed", speed)) }
-            "Playing a simulated day. Open WARD in a browser to watch it."
-        }
-        BigButton("Play a recorded day", enabled = !busy) { play(8) }
-        OutlinedButton(onClick = { play(60) }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = RoundedCornerShape(14.dp)) {
-            Text("Play it fast", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Ink)
-        }
-        if (demoStatus.isNotEmpty()) Text(demoStatus, fontSize = 16.sp)
-    }
-
-    TextButton(onClick = {
+    if (tab == 2) TextButton(onClick = {
         Sync.cancelDaily(context)
         prefs.signOut()
         signedOut()

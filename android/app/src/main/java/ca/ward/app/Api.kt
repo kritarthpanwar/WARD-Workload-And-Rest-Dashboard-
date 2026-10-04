@@ -86,6 +86,12 @@ class Api(private val prefs: Prefs) {
         return JSONObject(text)
     }
 
+    fun getArray(path: String): org.json.JSONArray {
+        val (code, text) = request("GET", prefs.serverUrl + path, null, "", token())
+        if (code !in 200..299) throw ApiError(detail(text, "The server answered $code."))
+        return org.json.JSONArray(text)
+    }
+
     fun get(path: String): JSONObject {
         val (code, text) = request("GET", prefs.serverUrl + path, null, "", token())
         if (code !in 200..299) throw ApiError(detail(text, "The server answered $code."))
