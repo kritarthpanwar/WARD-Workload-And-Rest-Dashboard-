@@ -31,7 +31,9 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Nothing is tracked live. Once a day (and whenever asked) the app reads what
- * the watch has written to Health Connect since the last upload and sends it.
+ * the watch has written to Health Connect over the last three days and sends it.
+ * Samsung Health writes late, so the same stretch is read again each time; the
+ * server replaces what it had for that stretch.
  */
 object Sync {
     val PERMISSIONS = setOf(
@@ -42,23 +44,23 @@ object Sync {
     )
     const val BACKGROUND = "android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND"
     private const val CHUNK = 5000
-    private val LOOK_BACK: Duration = Duration.ofHours(48)
+    private val LOOK_BACK: Duration = Duration.ofHours(72)
 
     fun available(context: Context) = HealthConnectClient.getSdkStatus(context) == HealthConnectClient.SDK_AVAILABLE
 
     suspend fun hasPermissions(context: Context): Boolean =
         HealthConnectClient.getOrCreate(context).permissionController.getGrantedPermissions().containsAll(PERMISSIONS)
 
-    /** Upload everything since the last upload (at most the last 48 hours). Returns a one-line summary. */
+    /** Upload the last three days. Returns a one-line summary. */
     suspend fun upload(context: Context): String = withContext(Dispatchers.IO) {
         val prefs = Prefs(context)
         val client = HealthConnectClient.getOrCreate(context)
         val to = Instant.now().truncatedTo(ChronoUnit.MINUTES)
-        val from = maxOf(Instant.ofEpochMilli(prefs.uploadedUntil), to.minus(LOOK_BACK)).truncatedTo(ChronoUnit.MINUTES)
-        if (!to.isAfter(from)) return@withContext prefs.lastUpload
+        val from = to.minus(LOOK_BACK)
         val range = TimeRangeFilter.between(from, to)
         val samples = ArrayList<JSONObject>()
         var heartRates = 0
+        var stepMinutes = 0
 
         var pageToken: String? = null
         do {
@@ -74,6 +76,7 @@ object Sync {
         // steps: one total per minute; Health Connect removes double counting between sources
         for (b in client.aggregateGroupByDuration(AggregateGroupByDurationRequest(setOf(StepsRecord.COUNT_TOTAL), range, Duration.ofMinutes(1)))) {
             val count = b.result[StepsRecord.COUNT_TOTAL] ?: 0L
+            if (count > 0) stepMinutes++
             if (count > 0) samples.add(JSONObject().put("ts", b.startTime.toString()).put("type", "steps").put("value", count))
         }
 
@@ -100,8 +103,10 @@ object Sync {
             api.post("/ingest", body)
             first = false
         }
-        prefs.uploadedUntil = to.toEpochMilli()
-        val summary = "Uploaded at ${LocalTime.now().truncatedTo(ChronoUnit.MINUTES)}: $heartRates heart-rate readings, ${sleep.length()} sleep sessions"
+        val at = LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
+        val summary = if (heartRates == 0)
+            "Checked at $at: Health Connect has no heart rate from the last 3 days ($stepMinutes minutes with steps, ${sleep.length()} sleep sessions). In Samsung Health, open Settings, Health Connect, and allow heart rate, then sync."
+        else "Uploaded at $at: $heartRates heart-rate readings, ${sleep.length()} sleep sessions"
         prefs.lastUpload = summary
         summary
     }

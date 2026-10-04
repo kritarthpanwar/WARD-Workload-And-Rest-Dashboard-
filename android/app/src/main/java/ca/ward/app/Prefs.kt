@@ -22,10 +22,6 @@ class Prefs(context: Context) {
         get() = sp.getLong("tokenExpiresAt", 0)
         set(v) = sp.edit().putLong("tokenExpiresAt", v).apply()
 
-    /** Everything up to this moment (epoch ms) has been uploaded. */
-    var uploadedUntil: Long
-        get() = sp.getLong("uploadedUntil", 0)
-        set(v) = sp.edit().putLong("uploadedUntil", v).apply()
     /** Hour of the day (0-23) for the automatic daily upload. */
     var uploadHour: Int
         get() = sp.getInt("uploadHour", 20)

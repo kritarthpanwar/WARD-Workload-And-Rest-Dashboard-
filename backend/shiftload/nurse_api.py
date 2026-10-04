@@ -355,6 +355,11 @@ def ingest(body: Ingest, user: User = Depends(nurse_only)):
             pipeline.store_sleep(conn, pid, [s.model_dump() for s in body.sleep], body.source_device)
         if body.samples:
             do_ingest(conn, n, [s.model_dump() for s in body.samples], body.source_device)
+        # a repeat upload must not bring back raw data for a shift that is already finalized
+        conn.execute(
+            """DELETE FROM core.minutes m USING core.shifts s
+               WHERE m.nurse_pid = %s AND s.nurse_pid = m.nurse_pid AND s.finalized
+                 AND m.ts >= s.start_ts AND m.ts < s.end_ts""", (pid,))
         # raw data that no shift has claimed does not stay: it is dropped after a week
         cutoff = datetime.now(timezone.utc) - timedelta(days=config.RAW_RETENTION_DAYS)
         conn.execute("DELETE FROM core.minutes WHERE nurse_pid = %s AND ts < %s", (pid, cutoff))
