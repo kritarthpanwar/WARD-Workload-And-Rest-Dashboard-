@@ -68,7 +68,7 @@ CREATE TABLE core.shifts (
   finalized            boolean NOT NULL DEFAULT false,
   shift_type           text NOT NULL,
   source_device        text,
-  data_mode            text NOT NULL DEFAULT 'live',   -- live / replay / synthetic
+  data_mode            text NOT NULL DEFAULT 'live',   -- live / recorded / replay / synthetic
   time_on_feet_min     int,
   longest_on_feet_min  int,
   mean_pct_hrr         real,

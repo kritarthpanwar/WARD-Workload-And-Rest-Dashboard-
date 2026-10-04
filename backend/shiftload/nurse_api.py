@@ -66,7 +66,9 @@ def active_shift(conn, nurse_pid) -> dict | None:
 
 
 def shift_now(conn, shift: dict) -> datetime:
-    """A replayed shift lives on the clock of its data; a live one on the wall clock."""
+    """A replayed shift lives on the clock of its data; a recorded one is already over; a live one uses the wall clock."""
+    if shift["data_mode"] == "recorded":
+        return shift["planned_end_ts"]
     if shift["data_mode"] == "replay":
         last = pipeline.latest_minute(conn, shift["nurse_pid"], shift["start_ts"])
         return last + timedelta(minutes=1) if last else shift["start_ts"]
@@ -261,6 +263,53 @@ def shift_start(body: ShiftStart, user: User = Depends(nurse_only)):
         n = get_nurse(conn, user)
         start = pipeline.floor_minute(body.start_ts or datetime.now(timezone.utc))
         return {"shift_id": create_shift(conn, n, start, "live", None)}
+
+
+class RecordedShift(BaseModel):
+    start_ts: datetime
+    end_ts: datetime
+    source_device: str
+    samples: list[Sample] = []
+    sleep: list[SleepSession] = []
+
+
+@app.post("/shifts/record")
+def shift_record(body: RecordedShift, user: User = Depends(nurse_only)):
+    """Upload a finished shift from the watch in one go. The nurse then reviews it on the site."""
+    start, end = pipeline.floor_minute(body.start_ts), pipeline.floor_minute(body.end_ts)
+    hours = (end - start).total_seconds() / 3600
+    if not 1 <= hours <= 16:
+        raise HTTPException(422, "a shift must be between 1 and 16 hours long")
+    if end > datetime.now(timezone.utc) + timedelta(minutes=5):
+        raise HTTPException(422, "this shift has not finished yet")
+    with pool.connection() as conn:
+        n = get_nurse(conn, user)
+        pid = n["nurse_pid"]
+        if n["paused_until"] and n["paused_until"] > datetime.now(timezone.utc):
+            raise HTTPException(409, "recording is paused")
+        if conn.execute("SELECT 1 FROM core.shifts WHERE nurse_pid = %s AND finalized AND start_ts < %s AND end_ts > %s",
+                        (pid, end, start)).fetchone():
+            raise HTTPException(409, "a finished shift already covers this time")
+        # sending the same shift again replaces the earlier upload
+        conn.execute("DELETE FROM core.break_events WHERE shift_id IN (SELECT shift_id FROM core.shifts WHERE nurse_pid = %s AND NOT finalized)", (pid,))
+        conn.execute("DELETE FROM core.shifts WHERE nurse_pid = %s AND NOT finalized", (pid,))
+        conn.execute("DELETE FROM core.minutes WHERE nurse_pid = %s", (pid,))
+        conn.execute("DELETE FROM core.windows WHERE nurse_pid = %s", (pid,))
+        resting = [s.value for s in body.samples if s.type == "resting_hr"]
+        if resting and n["hr_rest"] is None:
+            n["hr_rest"] = statistics.median(resting)
+            conn.execute("UPDATE core.nurses SET hr_rest = %s WHERE nurse_pid = %s", (n["hr_rest"], pid))
+        if body.sleep:
+            pipeline.store_sleep(conn, pid, [s.model_dump() for s in body.sleep], body.source_device)
+        shift_id = str(uuid.uuid4())
+        conn.execute(
+            """INSERT INTO core.shifts (shift_id, nurse_pid, unit_id, start_ts, planned_end_ts, shift_type,
+                   source_device, data_mode) VALUES (%s, %s, %s, %s, %s, %s, %s, 'recorded')""",
+            (shift_id, pid, n["unit_id"], start, end, pipeline.shift_type_for(start), body.source_device))
+        inside = [s.model_dump() for s in body.samples if s.type != "resting_hr" and start <= s.ts < end]
+        do_ingest(conn, n, inside, body.source_device)
+        heart = sum(1 for s in inside if s["type"] == "hr")
+    return {"shift_id": shift_id, "heart_rate_readings": heart, "minutes": int(hours * 60)}
 
 
 @app.post("/shifts/{shift_id}/correct")

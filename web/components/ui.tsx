@@ -27,7 +27,8 @@ import { signOut } from "firebase/auth";
 import { Role, saveSession, useSession } from "@/lib/api";
 import { auth } from "@/lib/firebase";
 
-export type Mode = "live" | "replay" | "synthetic";
+// recorded = real watch data uploaded after the shift ended
+export type Mode = "live" | "recorded" | "replay" | "synthetic";
 
 /** Every panel says where its data comes from. */
 export function Badge({ mode, note }: { mode: Mode; note?: string }) {

@@ -269,6 +269,7 @@ export function Today({ me }: { me: Me }) {
   const active = picked === null ? null : lines.find((l) => l.key === picked) ?? null;
   const nowLoad = [...cur.windows].reverse().find((w) => w.pct_hrr !== null)?.pct_hrr ?? null;
   const simulated = shift.data_mode === "replay" ? "simulated" : undefined;
+  const recorded = shift.data_mode === "recorded";   // uploaded after the shift ended
 
   return (
     <>
@@ -276,14 +277,14 @@ export function Today({ me }: { me: Me }) {
         title="My shift"
         sub={
           <>
-            {me.display_name} · {fmtDay(shift.start_ts)} · {shift.shift_type === "day" ? "day" : "night"} shift from {fmtTime(shift.start_ts)} · <strong>{hm(cur.elapsed_min)}</strong> in
+            {me.display_name} · {fmtDay(shift.start_ts)} · {shift.shift_type === "day" ? "day" : "night"} shift from {fmtTime(shift.start_ts)} · <strong>{hm(cur.elapsed_min)}</strong> {recorded ? "long" : "in"}
           </>
         }
         right={
           <>
             <Badge mode={shift.data_mode} note={simulated} />
             <button disabled={cur.replay_running} onClick={() => nurseApi<Proposal>(`/shifts/${shift.shift_id}/propose`, {}).then(setProposal, (e) => setError(e.message))}>
-              {cur.replay_running ? "Playing the recorded day…" : "End shift"} <ArrowRight size={16} />
+              {cur.replay_running ? "Playing the recorded day…" : recorded ? "Review and finish" : "End shift"} <ArrowRight size={16} />
             </button>
           </>
         }
@@ -294,7 +295,7 @@ export function Today({ me }: { me: Me }) {
           <section className="panel hero-chart">
             <div className="head">
               <div>
-                <div className="sub" style={{ fontWeight: 700 }}>Physical load right now</div>
+                <div className="sub" style={{ fontWeight: 700 }}>{recorded ? "Physical load at the end" : "Physical load right now"}</div>
                 <div className="kpi">
                   {nowLoad === null ? "—" : nowLoad.toFixed(0)}
                   <small>% effort</small>
@@ -393,7 +394,7 @@ export function Today({ me }: { me: Me }) {
 
         <aside>
           <section className="panel ring-card">
-            <div className="sub" style={{ fontWeight: 700 }}>Since your last break</div>
+            <div className="sub" style={{ fontWeight: 700 }}>{recorded ? "From your last break to the end" : "Since your last break"}</div>
             <Ring fraction={since / 300} color={breakColor}>
               <b>{since >= 60 ? `${Math.floor(since / 60)}h ${since % 60}m` : `${since}m`}</b>
               <span className="muted">of 5 hours</span>
@@ -401,6 +402,7 @@ export function Today({ me }: { me: Me }) {
             <h2 style={{ color: since >= 300 ? "var(--critical)" : undefined }}>{breakWord}</h2>
           </section>
 
+          {!recorded && (
           <section className="panel relief-card">
             {cur.relief_pending ? (
               <>
@@ -417,6 +419,7 @@ export function Today({ me }: { me: Me }) {
               </>
             )}
           </section>
+          )}
         </aside>
       </div>
     </>

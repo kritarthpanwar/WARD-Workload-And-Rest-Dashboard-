@@ -30,7 +30,7 @@ Nurse workload documentation tool for StormHack. The full spec is
 - k = 5 and the membership-change rule apply to every published cell.
 - Gemini never receives or writes a number. Code supplies every number.
 - No Gemini on the nurse path.
-- Every panel carries a LIVE / REPLAY / SYNTHETIC badge and every page the
+- Every panel carries a LIVE / RECORDED / REPLAY / SYNTHETIC badge and every page the
   footer "Workload documentation tool — not a medical device."
 - Raw minute/window data is deleted when a shift is finalized.
 - No individual-level data for managers, no daily manager view.

@@ -446,7 +446,8 @@ footer.disclaimer {
   color: var(--replay-ink);
 }
 
-.badge.live {
+.badge.live,
+.badge.recorded {
   background: var(--live-bg);
   color: var(--live-ink);
 }

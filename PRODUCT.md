@@ -31,7 +31,8 @@ Success: a nurse gets relief or a usable record without extra effort, and a unit
 
 ## Operating Context
 
-- Data comes from a wearable (watch for the prototype, upper-arm band for deployment) through the phone. The phone app is not built yet; the site replays a simulated recorded day.
+- Data comes from a wearable (watch for the prototype, upper-arm band for deployment) through the phone. Live data was dropped as not feasible (user, 2026-10-04): the Android app reads a finished shift from Health Connect and uploads it in one go, and the nurse reviews it on the site afterwards. The site can also replay a simulated recorded day.
+- Because nothing arrives during the shift, there is no automatic five-hour break alert. Requesting relief is a manual button.
 - Nurses confirm breaks once, at end of shift. Shift times default from their rotation.
 - Managers get fixed calendar weeks only. A trustee runs the weekly release.
 - The demo runs on a synthetic cohort of four units over twelve weeks.
@@ -52,7 +53,7 @@ Hard constraints from the spec (`CONTEXT_storm`, v4):
 Terminology: band (green / amber / red / not enough data), physical load, recovery opportunity, relief request, weekly release, reporting gap, red shift.
 
 Not built or undecided:
-- Phone and watch notifications (the intended main nurse channel) and the Health Connect phone app.
+- Phone and watch notifications: dropped along with live data.
 - Real sign-in (a demo role picker stands in).
 - The trained expected-heart-rate model (a hand-set formula stands in).
 - Deployment.
