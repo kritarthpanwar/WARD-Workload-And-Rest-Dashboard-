@@ -28,6 +28,7 @@ type Current = {
   phys_band_so_far: string;
   suggested_breaks: Break[];
   since_break_min: number;
+  sleep_before_min: number | null;
   nudge: boolean;
   relief_pending: boolean;
 };
@@ -52,6 +53,7 @@ type Card = {
   coverage_pct: number;
   max_gap_min: number;
   ratio_status: string;
+  sleep_before_min: number | null;
 };
 
 type Proposal = { end_ts: string; breaks: { id: string; start_ts: string; end_ts: string }[] };
@@ -356,6 +358,20 @@ function Today({ me }: { me: Me }) {
         </Panel>
       )}
 
+      {cur.sleep_before_min !== null && (
+        <div className="metric">
+          <div className="kicker">
+            <span className="icon" style={{ background: "var(--sleep)" }} />
+            Sleep
+          </div>
+          <div className="value">
+            {Math.floor(cur.sleep_before_min / 60)}
+            <small>h</small> {cur.sleep_before_min % 60}
+            <small>min before this shift</small>
+          </div>
+        </div>
+      )}
+
       <div className="metric">
         <div className="kicker">
           <span className="icon" style={{ background: "var(--series-2)" }} />
@@ -544,6 +560,14 @@ function ShiftCard({ card }: { card: Card }) {
             <div className="sub">{card.unexplained_hr_min} min of high heart rate while still</div>
           </span>
         </div>
+        {card.sleep_before_min !== null && (
+          <div>
+            <span className="grow">
+              <strong>Sleep</strong>
+              <div className="sub">{hm(card.sleep_before_min)} in the 24 hours before the shift</div>
+            </span>
+          </div>
+        )}
         <div>
           <span className="grow">
             <strong>Recording</strong>
@@ -608,6 +632,8 @@ function Highlights({ cur, startIso }: { cur: Current; startIso: string }) {
   if (heavy && heavy[1] - heavy[0] >= 10) lines.push({ color: "var(--series-1)", text: `Your heart was working hard at ${at(heavy[0])}` });
   const stress = longest((w) => !!w.unexplained);
   if (stress) lines.push({ color: "var(--series-2)", text: `Stress was high at ${at(stress[0])}` });
+  if (cur.sleep_before_min !== null && cur.sleep_before_min < 360)
+    lines.push({ color: "var(--sleep)", text: `You slept ${hm(cur.sleep_before_min)} before this shift` });
   if (cur.since_break_min >= 300) lines.push({ color: "var(--critical)", text: `No break for ${hm(cur.since_break_min)}` });
   if (!lines.length) return null;
   return (

@@ -4,6 +4,8 @@ A shift is two per-minute arrays indexed from shift start:
   hr     mean heart rate for the minute, NaN when the minute has no HR sample
   steps  steps in the minute
 """
+from datetime import datetime, timedelta
+
 import numpy as np
 
 from . import config
@@ -65,6 +67,27 @@ def suggest_breaks(steps: np.ndarray, pct_hrr: np.ndarray) -> list[tuple[int, in
         if e - s >= config.BREAK_MIN_LEN and pct_hrr[s:e].mean() < config.BREAK_MAX_PCT_HRR:
             out.append((s, e))
     return out
+
+
+def sleep_before(sessions: list[tuple[datetime, datetime]], shift_start: datetime,
+                 hours: int = 24) -> int | None:
+    """Minutes asleep in the `hours` before shift start. None when no session overlaps.
+
+    Overlapping sessions (two devices, or a nap inside a night) are merged first.
+    """
+    lo = shift_start - timedelta(hours=hours)
+    clipped = sorted((max(s, lo), min(e, shift_start)) for s, e in sessions if e > lo and s < shift_start)
+    if not clipped:
+        return None
+    total, cur_s, cur_e = 0.0, *clipped[0]
+    for s, e in clipped[1:]:
+        if s <= cur_e:
+            cur_e = max(cur_e, e)
+        else:
+            total += (cur_e - cur_s).total_seconds()
+            cur_s, cur_e = s, e
+    total += (cur_e - cur_s).total_seconds()
+    return int(round(total / 60))
 
 
 def longest_no_break(shift_len: int, breaks: list[tuple[int, int]]) -> int:

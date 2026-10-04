@@ -12,6 +12,7 @@
   --accent: #2a78d6;
   --series-1: #2a78d6;
   --series-2: #eb6834;
+  --sleep: #4a3aa7;
   /* sequential blue, low -> high */
   --seq-1: #cde2fb;
   --seq-2: #86b6ef;
@@ -40,6 +41,7 @@
     --accent: #3987e5;
     --series-1: #3987e5;
     --series-2: #d95926;
+    --sleep: #9085e9;
     --seq-1: #0d366b;
     --seq-2: #1c5cab;
     --seq-3: #3987e5;

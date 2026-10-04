@@ -85,7 +85,7 @@ def own_shift(conn, nurse: dict, shift_id: str) -> dict:
 SHIFT_CARD = """shift_id, start_ts, end_ts, shift_type, data_mode, band, phys_band, recovery_band,
     recovery_provisional, mean_pct_hrr, min_above_30_hrr, longest_no_break_min, n_breaks_confirmed,
     breaks_uncertain, unexplained_hr_min, time_on_feet_min, longest_on_feet_min, coverage_pct,
-    max_gap_min, ratio_status, drained_rating"""
+    max_gap_min, ratio_status, drained_rating, sleep_before_min"""
 
 
 # --------------------------------------------------------------- onboarding
@@ -103,9 +103,15 @@ class Sample(BaseModel):
     value: float
 
 
+class SleepSession(BaseModel):
+    start_ts: datetime
+    end_ts: datetime
+
+
 class Ingest(BaseModel):
     source_device: str
-    samples: list[Sample]
+    samples: list[Sample] = []
+    sleep: list[SleepSession] = []      # optional: only when the watch records sleep
 
 
 @app.get("/health")
@@ -192,7 +198,7 @@ def withdraw(user: User = Depends(nurse_only)):
         conn.execute(
             "DELETE FROM core.break_events WHERE shift_id IN (SELECT shift_id FROM core.shifts WHERE nurse_pid = %s)",
             (pid,))
-        for table in ("shifts", "minutes", "windows", "relief_requests"):
+        for table in ("shifts", "minutes", "windows", "relief_requests", "sleep_sessions"):
             conn.execute(f"DELETE FROM core.{table} WHERE nurse_pid = %s", (pid,))
         conn.execute(
             """UPDATE core.nurses SET birth_year = NULL, hr_rest = NULL, hr_steps_model_json = NULL,
@@ -272,8 +278,11 @@ def ingest(body: Ingest, user: User = Depends(nurse_only)):
             n["hr_rest"] = statistics.median(resting)
             conn.execute("UPDATE core.nurses SET hr_rest = %s WHERE nurse_pid = %s",
                          (n["hr_rest"], n["nurse_pid"]))
-        do_ingest(conn, n, [s.model_dump() for s in body.samples], body.source_device)
-    return {"accepted": len(body.samples)}
+        if body.sleep:
+            pipeline.store_sleep(conn, n["nurse_pid"], [s.model_dump() for s in body.sleep], body.source_device)
+        if body.samples:
+            do_ingest(conn, n, [s.model_dump() for s in body.samples], body.source_device)
+    return {"accepted": len(body.samples), "sleep_sessions": len(body.sleep)}
 
 
 @app.get("/me/shift/current")
@@ -305,6 +314,7 @@ def current(user: User = Depends(nurse_only)):
             "phys_band_so_far": metrics.phys_band(c["metrics"]["mean_pct_hrr"]),
             "suggested_breaks": [{"start_min": s, "end_min": e} for s, e in c["suggested"]],
             "since_break_min": since_break,
+            "sleep_before_min": pipeline.sleep_before_shift(conn, n["nurse_pid"], shift["start_ts"]),
             "nudge": since_break >= config.RELIEF_NUDGE_MIN and not pending,
             "relief_pending": bool(pending),
         }
@@ -558,6 +568,12 @@ def replay_start(body: ReplayStart, user: User = Depends(nurse_only)):
         conn.execute("DELETE FROM core.minutes WHERE nurse_pid = %s", (pid,))
         conn.execute("DELETE FROM core.windows WHERE nurse_pid = %s", (pid,))
         conn.execute("DELETE FROM core.relief_requests WHERE nurse_pid = %s", (pid,))
+        conn.execute("DELETE FROM core.sleep_sessions WHERE nurse_pid = %s AND start_ts >= %s",
+                     (pid, start - timedelta(hours=24)))
+        pipeline.store_sleep(conn, pid, [
+            {"start_ts": start + timedelta(minutes=s["start_min"]), "end_ts": start + timedelta(minutes=s["end_min"])}
+            for s in day.get("sleep", [])
+        ], day["source_device"])
         if n["hr_rest"] is None:
             n["hr_rest"] = float(day["resting_hr"])
             conn.execute("UPDATE core.nurses SET hr_rest = %s WHERE nurse_pid = %s", (n["hr_rest"], pid))

@@ -3,7 +3,8 @@
 This stands in for the real watch recording described in the spec (brisk
 walks, still periods, real breaks, a stationary-effort block). Replace the
 file with a real Health Connect export when one exists; the format is one
-entry per minute: {"m": minute offset, "hr": bpm or null, "steps": count}.
+entry per minute: {"m": minute offset, "hr": bpm or null, "steps": count},
+plus optional sleep sessions as minute offsets from shift start.
 """
 import json
 from pathlib import Path
@@ -62,6 +63,8 @@ def main() -> None:
         "source_device": "simulated-watch",
         "start_hour_local": 7,
         "resting_hr": 62,
+        # night before the shift, minutes relative to the 07:00 start: 23:40 to 05:30
+        "sleep": [{"start_min": -440, "end_min": -90}],
         "minutes": minutes,
     }))
     print(f"wrote {OUT}")

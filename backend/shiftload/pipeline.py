@@ -42,6 +42,25 @@ def ingest(conn, nurse_pid: str, samples: list[dict]) -> int:
     return len(agg)
 
 
+def store_sleep(conn, nurse_pid: str, sessions: list[dict], device: str | None) -> None:
+    with conn.cursor() as cur:
+        cur.executemany(
+            """INSERT INTO core.sleep_sessions (nurse_pid, start_ts, end_ts, source_device)
+               VALUES (%s, %s, %s, %s)
+               ON CONFLICT (nurse_pid, start_ts) DO UPDATE SET end_ts = EXCLUDED.end_ts""",
+            [(nurse_pid, s["start_ts"], s["end_ts"], device) for s in sessions if s["end_ts"] > s["start_ts"]],
+        )
+
+
+def sleep_before_shift(conn, nurse_pid: str, start: datetime) -> int | None:
+    rows = conn.execute(
+        """SELECT start_ts, end_ts FROM core.sleep_sessions
+           WHERE nurse_pid = %s AND end_ts > %s AND start_ts < %s""",
+        (nurse_pid, start - timedelta(hours=24), start),
+    ).fetchall()
+    return metrics.sleep_before([(r["start_ts"], r["end_ts"]) for r in rows], start)
+
+
 def load_arrays(conn, nurse_pid: str, start: datetime, end: datetime):
     """Per-minute HR (NaN when no sample) and steps between start and end."""
     n = max(int((end - start).total_seconds() // 60), 0)
@@ -144,17 +163,21 @@ def finalize(conn, nurse: dict, shift: dict, end: datetime, confirmed: list[tupl
                longest_no_break_min = %s, n_breaks_confirmed = %s, breaks_uncertain = %s,
                unexplained_hr_min = %s, coverage_pct = %s, max_gap_min = %s, phys_band = %s,
                recovery_band = %s, band = %s, recovery_provisional = %s, ratio_status = %s,
-               drained_rating = %s
+               drained_rating = %s, sleep_before_min = %s
            WHERE shift_id = %s""",
         (end, m["time_on_feet_min"], m["longest_on_feet_min"], m["mean_pct_hrr"],
          m["min_above_30_hrr"], no_break, 0 if breaks_uncertain else len(confirmed),
          breaks_uncertain, m["unexplained_hr_min"], m["coverage_pct"], m["max_gap_min"],
          bands["phys_band"], bands["recovery_band"], bands["band"], provisional, ratio_status,
-         drained_rating, shift["shift_id"]),
+         drained_rating, sleep_before_shift(conn, nurse["nurse_pid"], shift["start_ts"]),
+         shift["shift_id"]),
     )
     # raw data does not outlive the shift
     conn.execute("DELETE FROM core.minutes WHERE nurse_pid = %s AND ts < %s", (nurse["nurse_pid"], end))
     conn.execute("DELETE FROM core.windows WHERE shift_id = %s", (shift["shift_id"],))
+    # sleep before this shift is now summarised on the shift row
+    conn.execute("DELETE FROM core.sleep_sessions WHERE nurse_pid = %s AND end_ts <= %s",
+                 (nurse["nurse_pid"], shift["start_ts"]))
     n_done = conn.execute(
         "SELECT count(*) AS n FROM core.shifts WHERE nurse_pid = %s AND finalized", (nurse["nurse_pid"],)
     ).fetchone()["n"]

@@ -85,6 +85,7 @@ CREATE TABLE core.shifts (
   recovery_provisional boolean,
   ratio_status         text,
   drained_rating       int,
+  sleep_before_min     int,            -- NULL when the watch sent no sleep data
   is_synthetic         boolean NOT NULL DEFAULT false,
   PRIMARY KEY (shift_id, start_ts)
 );
@@ -118,6 +119,17 @@ CREATE TABLE core.windows (
   PRIMARY KEY (nurse_pid, ts)
 );
 SELECT create_hypertable('core.windows', 'ts');
+
+-- Sleep sessions from the watch (Health Connect SleepSessionRecord). Only the
+-- session start and end are kept, never sleep stages. A session is folded into
+-- the next shift's sleep_before_min and deleted when that shift is finalized.
+CREATE TABLE core.sleep_sessions (
+  nurse_pid     uuid NOT NULL,
+  start_ts      timestamptz NOT NULL,
+  end_ts        timestamptz NOT NULL,
+  source_device text,
+  PRIMARY KEY (nurse_pid, start_ts)
+);
 
 CREATE TABLE core.break_events (
   break_id uuid PRIMARY KEY,
