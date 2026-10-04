@@ -1,7 +1,7 @@
 # ShiftLoad
 
 Nurse workload documentation tool for StormHack. The full spec is
-`C:\Users\shahm\Downloads\CONTEXT_storm` (v3). Read it before changing behaviour.
+`CONTEXT.md` in this folder (v5). Read it before changing behaviour.
 
 ## Layout
 
