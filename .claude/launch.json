@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "nurse-api",
+      "runtimeExecutable": "backend/.venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "shiftload.nurse_api:app", "--app-dir", "backend", "--port", "8001"],
+      "port": 8001
+    },
+    {
+      "name": "manager-api",
+      "runtimeExecutable": "backend/.venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "shiftload.manager_api:app", "--app-dir", "backend", "--port", "8002"],
+      "port": 8002
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "web", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}

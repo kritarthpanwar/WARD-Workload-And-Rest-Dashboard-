@@ -171,7 +171,8 @@ CREATE TABLE core.unit_anomalies_daily (
 CREATE VIEW published.units AS
   SELECT unit_id, name, hospital FROM core.units;
 
--- One row per unit x week x shift type (day / night / all) x scenario.
+-- One row per unit x week x shift type (day / night) x scenario. Cells never
+-- overlap: there is no combined day+night cell to difference against.
 -- status: released / suppressed_k / suppressed_membership /
 --         not_representative / quality_gate
 -- Metric columns are NULL unless status = 'released'.
@@ -190,10 +191,20 @@ CREATE TABLE published.unit_weekly (
   pct_ratio_met_and_breaks int,
   phys_load_band          text,
   red_shifts_noised       int,
-  reports_sent_noised     int,
-  relief_requests_noised  int,
   data_mode               text NOT NULL DEFAULT 'synthetic',
   PRIMARY KEY (participation_scenario, unit_id, week_start, shift_type)
+);
+
+-- Unit-week counters (no cohort behind them). Present only when at least one
+-- cell of the week was released.
+CREATE TABLE published.unit_week_counts (
+  participation_scenario int  NOT NULL,
+  unit_id                text NOT NULL,
+  week_start             date NOT NULL,
+  red_shifts_noised      int  NOT NULL,
+  reports_sent_noised    int  NOT NULL,
+  relief_requests_noised int  NOT NULL,
+  PRIMARY KEY (participation_scenario, unit_id, week_start)
 );
 
 CREATE TABLE published.flags (
@@ -261,7 +272,7 @@ GRANT INSERT, UPDATE, DELETE ON core.unit_anomalies_daily TO release;
 
 GRANT USAGE ON SCHEMA published TO release, published_ro;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA published TO release;
-GRANT SELECT ON published.units, published.unit_weekly, published.flags,
+GRANT SELECT ON published.units, published.unit_weekly, published.unit_week_counts, published.flags,
                 published.weekly_reports, published.manager_actions TO published_ro;
 GRANT INSERT ON published.manager_actions TO published_ro;
 
