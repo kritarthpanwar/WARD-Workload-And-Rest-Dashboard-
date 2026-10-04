@@ -1,9 +1,9 @@
 "use client";
 
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, CalendarDays, Clock3, Coffee, Copy, HeartPulse, Moon, Play, Send, ShieldCheck, Zap } from "lucide-react";
-import { Break, LiveChart, Win } from "@/components/LiveChart";
-import { BAND_COLOR, Badge, BandChip, ErrorLine, Mode, More, PageHeading, Panel, Ring, Toggle, useRole } from "@/components/ui";
+import { ArrowLeft, ArrowRight, ChevronRight, Copy, Play, Send, ShieldCheck, Zap } from "lucide-react";
+import { Break, Roster, RosterKey, Span, Win } from "@/components/Roster";
+import { BAND_COLOR, Badge, BandChip, ErrorLine, Mode, More, PageHeading, Panel, Toggle, useRole } from "@/components/ui";
 import { fmtDay, fmtTime, hm, nurseApi } from "@/lib/api";
 
 export type Me = {
@@ -86,7 +86,7 @@ export function NurseGate({ children }: { children: (me: Me, reload: () => void)
         <ErrorLine error={error} />
       </main>
     );
-  return <main className="fade-in">{me.onboarded ? children(me, load) : <Onboarding me={me} done={load} />}</main>;
+  return <main>{me.onboarded ? children(me, load) : <Onboarding me={me} done={load} />}</main>;
 }
 
 // ------------------------------------------------------------- onboarding
@@ -102,7 +102,7 @@ function Onboarding({ me, done }: { me: Me; done: () => void }) {
 
   return (
     <div style={{ maxWidth: 620 }}>
-      <PageHeading eyebrow="Getting started" title={`Welcome, ${me.display_name.split(" ")[0]}`} sub={me.unit_name} />
+      <PageHeading title={`Welcome, ${me.display_name.split(" ")[0]}`} sub={me.unit_name} />
       <Panel>
         <div className="steps">
           {steps.map((s, i) => (
@@ -112,7 +112,7 @@ function Onboarding({ me, done }: { me: Me; done: () => void }) {
           ))}
         </div>
         {step === 0 && (
-          <div className="stack fade-in">
+          <div className="stack">
             <h2>An automatic record of your shifts</h2>
             <div className="notice">
               <ShieldCheck size={20} />
@@ -126,7 +126,7 @@ function Onboarding({ me, done }: { me: Me; done: () => void }) {
           </div>
         )}
         {step === 1 && (
-          <div className="stack fade-in">
+          <div className="stack">
             <label className="field">
               Birth year (to estimate your max heart rate)
               <input type="number" inputMode="numeric" placeholder="e.g. 1994" value={birthYear} onChange={(e) => setBirthYear(e.target.value)} />
@@ -145,7 +145,7 @@ function Onboarding({ me, done }: { me: Me; done: () => void }) {
           </div>
         )}
         {step === 2 && (
-          <div className="stack fade-in">
+          <div className="stack">
             <h2>Who should get your relief requests?</h2>
             <div className="choice">
               {RECIPIENTS.map(([k, label]) => (
@@ -181,6 +181,7 @@ export function Today({ me }: { me: Me }) {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [card, setCard] = useState<Card | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [picked, setPicked] = useState(0);
   const autoSent = useRef<string | null>(null);
 
   const refresh = useCallback(() => {
@@ -216,7 +217,7 @@ export function Today({ me }: { me: Me }) {
   if (!shift) {
     return (
       <>
-        <PageHeading eyebrow="Nursing workload documentation" title={card ? "Shift summary" : "My shift"} sub={`${me.display_name} · ${me.unit_name}`} />
+        <PageHeading title={card ? "Shift summary" : "My shift"} sub={`${me.display_name} · ${me.unit_name}`} />
         {card ? (
           <div style={{ maxWidth: 720 }}>
             <ShiftCard card={card} />
@@ -225,13 +226,12 @@ export function Today({ me }: { me: Me }) {
             </button>
           </div>
         ) : (
-          <Panel className="result" >
-            <CalendarDays size={34} color="var(--teal)" />
-            <h2 style={{ marginTop: 12 }}>No shift running</h2>
-            <p className="sub" style={{ margin: "6px 0 20px" }}>
+          <Panel className="empty">
+            <h2>No shift running</h2>
+            <p className="sub" style={{ margin: "6px auto 20px" }}>
               Play back a recorded day to see how it works.
             </p>
-            <div className="row" style={{ justifyContent: "center" }}>
+            <div className="row">
               <button className="primary" onClick={() => startReplay(8)}>
                 <Play size={17} /> Play a recorded day
               </button>
@@ -265,155 +265,135 @@ export function Today({ me }: { me: Me }) {
   const since = cur.since_break_min;
   const breakColor = since >= 300 ? "var(--critical)" : since >= 240 ? "var(--warning)" : "var(--teal)";
   const breakWord = since >= 300 ? "Over 5 hours without a break" : since >= 240 ? "A break is due soon" : "On track";
+  const lines = highlightLines(cur, shift.start_ts);
+  const active = lines[Math.min(picked, lines.length - 1)] ?? null;
 
   return (
     <>
       <PageHeading
-        eyebrow="Nursing workload documentation"
         title="My shift"
+        sub={
+          <>
+            {fmtDay(shift.start_ts)} · {shift.shift_type === "day" ? "day" : "night"} shift from {fmtTime(shift.start_ts)} · <strong>{hm(cur.elapsed_min)}</strong> in
+          </>
+        }
         right={
-          <button disabled={cur.replay_running} onClick={() => nurseApi<Proposal>(`/shifts/${shift.shift_id}/propose`, {}).then(setProposal, (e) => setError(e.message))}>
-            {cur.replay_running ? "Playing the recorded day…" : "End shift"} <ArrowRight size={16} />
-          </button>
+          <>
+            <button disabled={cur.replay_running} onClick={() => nurseApi<Proposal>(`/shifts/${shift.shift_id}/propose`, {}).then(setProposal, (e) => setError(e.message))}>
+              {cur.replay_running ? "Playing the recorded day…" : "End shift"} <ArrowRight size={16} />
+            </button>
+          </>
         }
       />
-      <div className="shift-strip">
-        <div className="row">
-          <span className="icon-box">
-            <CalendarDays size={20} />
-          </span>
-          <div>
-            <strong>{fmtDay(shift.start_ts)}</strong>
-            <div className="muted">
-              {shift.shift_type === "day" ? "Day" : "Night"} shift · started {fmtTime(shift.start_ts)}
-            </div>
-          </div>
-          <span className="divider" />
-          <div className="elapsed">
-            <small>SHIFT ELAPSED</small>
-            <strong>
-              {hm(cur.elapsed_min)} <span className="muted">/ 12 h</span>
-            </strong>
-          </div>
-        </div>
-        <div className="row">
-          <span className="muted">{me.unit_name}</span>
-          <Badge mode={shift.data_mode} note={shift.data_mode === "replay" ? "simulated" : undefined} />
-        </div>
-      </div>
 
       <div className="split">
         <div>
-          <Panel title="Shift timeline">
-            <LiveChart windows={cur.windows} breaks={cur.suggested_breaks} startIso={shift.start_ts} elapsed={cur.elapsed_min} />
+          <Panel title="Shift roster" mode={shift.data_mode} modeNote={shift.data_mode === "replay" ? "simulated" : undefined}>
+            <Roster windows={cur.windows} breaks={cur.suggested_breaks} startIso={shift.start_ts} swipe={active?.span ?? null} />
+            <RosterKey />
+            {lines.length > 0 && (
+              <ul className="highlights" style={{ marginTop: 16 }}>
+                {lines.map((l, i) => (
+                  <li key={l.key}>
+                    <button onClick={() => setPicked(i)} onMouseEnter={() => setPicked(i)} aria-pressed={active?.key === l.key}>
+                      <span>
+                        {l.before}
+                        <span className="mark" style={{ ["--hl" as string]: l.hl }}>
+                          {l.marked}
+                        </span>
+                        {l.after}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Panel>
 
-          <Highlights cur={cur} startIso={shift.start_ts} />
-
-          <div className="grid-4">
-            <div className="metric" style={{ borderTopColor: "var(--series-1)" }}>
-              <div className="kicker">
-                <HeartPulse size={17} /> Physical load
-              </div>
-              <div className="value">
-                {m.mean_pct_hrr === null ? "—" : m.mean_pct_hrr.toFixed(0)}
-                <small>% effort</small>
-              </div>
-              <div className="caption">
-                <BandChip band={cur.phys_band_so_far} label={LOAD_WORD[cur.phys_band_so_far]} />
-              </div>
-            </div>
-            <div className="metric" style={{ borderTopColor: "var(--series-2)" }}>
-              <div className="kicker">
-                <Zap size={17} /> Stress
-              </div>
-              <div className="value">
-                {m.unexplained_hr_min}
-                <small>min</small>
-              </div>
-              <div className="caption muted">high heart rate while still</div>
-            </div>
-            {cur.sleep_before_min !== null ? (
-              <div className="metric" style={{ borderTopColor: "var(--sleep)" }}>
-                <div className="kicker">
-                  <Moon size={17} /> Sleep
-                </div>
-                <div className="value">
-                  {Math.floor(cur.sleep_before_min / 60)}
-                  <small>h</small> {cur.sleep_before_min % 60}
-                  <small>m</small>
-                </div>
-                <div className="caption muted">before this shift</div>
-              </div>
-            ) : (
-              <div className="metric">
-                <div className="kicker">
-                  <Moon size={17} /> Sleep
-                </div>
-                <div className="value" style={{ color: "var(--muted)" }}>—</div>
-                <div className="caption muted">no sleep data</div>
-              </div>
-            )}
-            <div className="metric">
-              <div className="kicker">
-                <Clock3 size={17} /> Recorded
-              </div>
-              <div className="value">
-                {m.coverage_pct.toFixed(0)}
-                <small>%</small>
-              </div>
-              <div className="bar-track">
-                <div style={{ width: `${m.coverage_pct}%`, background: m.coverage_pct < 70 ? "var(--warning)" : "var(--teal)" }} />
-              </div>
-            </div>
-          </div>
+          <Panel title="Day sheet" mode={shift.data_mode} modeNote={shift.data_mode === "replay" ? "simulated" : undefined}>
+            <table className="sheet-table">
+              <tbody>
+                <tr>
+                  <th scope="row">Physical load</th>
+                  <td className="val">{m.mean_pct_hrr === null ? "—" : `${m.mean_pct_hrr.toFixed(0)}%`}</td>
+                  <td>
+                    <BandChip band={cur.phys_band_so_far} label={LOAD_WORD[cur.phys_band_so_far]} />
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Stress</th>
+                  <td className="val">{m.unexplained_hr_min} min</td>
+                  <td className="sub">high heart rate while still</td>
+                </tr>
+                <tr>
+                  <th scope="row">Sleep</th>
+                  <td className="val">{cur.sleep_before_min === null ? "—" : hm(cur.sleep_before_min)}</td>
+                  <td className="sub">{cur.sleep_before_min === null ? "no sleep data from the watch" : "before this shift"}</td>
+                </tr>
+                <tr>
+                  <th scope="row">Recorded</th>
+                  <td className="val">{m.coverage_pct.toFixed(0)}%</td>
+                  <td className="sub">of the shift so far</td>
+                </tr>
+              </tbody>
+            </table>
+          </Panel>
           <ErrorLine error={error} />
         </div>
 
         <aside>
-          <section className="panel hero-card">
-            <Ring fraction={since / 300} color={breakColor}>
-              <strong style={{ fontSize: 21 }}>{since >= 60 ? `${Math.floor(since / 60)}h ${since % 60}m` : `${since}m`}</strong>
-              <span className="muted" style={{ fontSize: 12 }}>
-                no break
-              </span>
-            </Ring>
-            <div className="ring-text">
-              <div className="muted">Since your last break</div>
-              <h2>{breakWord}</h2>
+          <Panel title="Since last break" mode={shift.data_mode} modeNote={shift.data_mode === "replay" ? "simulated" : undefined}>
+            <div className="big-fig">
+              {Math.floor(since / 60)}
+              <small>h</small> {since % 60}
+              <small>min</small>
             </div>
-          </section>
+            <div className="tally" aria-hidden>
+              {[0, 1, 2, 3, 4].map((k) => (
+                <div key={k}>
+                  <i style={{ width: `${Math.min(Math.max((since - 60 * k) / 60, 0), 1) * 100}%`, background: breakColor }} />
+                </div>
+              ))}
+            </div>
+            <div className="tally-scale" aria-hidden>
+              {[1, 2, 3, 4, 5].map((h) => (
+                <span key={h}>{h} h</span>
+              ))}
+            </div>
+            <p style={{ margin: "12px 0 0", fontWeight: 700 }}>{breakWord}</p>
+          </Panel>
 
-          <section className="panel relief-card">
-            <span className="relief-icon">
-              <Coffee size={24} />
-            </span>
+          <Panel title="Relief" mode="live">
             {cur.relief_pending ? (
               <>
-                <h2>Relief requested</h2>
-                <p className="sub">Your {recipientLabel(me.relief_recipient).toLowerCase()} has been told.</p>
+                <h2>
+                  <span className="mark">Relief requested</span>
+                </h2>
+                <p className="sub" style={{ margin: "8px 0 0" }}>
+                  Your {recipientLabel(me.relief_recipient).toLowerCase()} has been told. They see your name only.
+                </p>
               </>
             ) : (
               <>
-                <h2>Need a break?</h2>
-                <p className="sub">Ask your {recipientLabel(me.relief_recipient).toLowerCase()} for cover.</p>
                 <button className="primary big" onClick={requestRelief}>
                   Request relief <ArrowRight size={18} />
                 </button>
+                <p className="sub" style={{ margin: "10px 0 0" }}>
+                  Goes to your {recipientLabel(me.relief_recipient).toLowerCase()}. They see your name only.
+                </p>
               </>
             )}
-            <div className="privacy-line">
-              <ShieldCheck size={15} /> They see your name only.
-            </div>
-          </section>
+          </Panel>
         </aside>
       </div>
     </>
   );
 }
 
-// One or two big plain sentences about what stood out, with the time it happened.
-function Highlights({ cur, startIso }: { cur: Current; startIso: string }) {
+type Line = { key: string; before: string; marked: string; after: string; hl: string; span: Span | null };
+
+// One to four plain sentences about what stood out; each can mark its stretch on the roster.
+function highlightLines(cur: Current, startIso: string): Line[] {
   const at = (min: number) => fmtTime(new Date(new Date(startIso).getTime() + min * 60000).toISOString());
   const longest = (pred: (w: Win) => boolean) => {
     let best: [number, number] | null = null;
@@ -426,25 +406,21 @@ function Highlights({ cur, startIso }: { cur: Current; startIso: string }) {
     }
     return best;
   };
-  const lines: { color: string; text: string }[] = [];
+  const lines: Line[] = [];
   const heavy = longest((w) => (w.pct_hrr ?? 0) >= 30);
-  if (heavy && heavy[1] - heavy[0] >= 10) lines.push({ color: "var(--series-1)", text: `Your heart was working hard at ${at(heavy[0])}` });
+  if (heavy && heavy[1] - heavy[0] >= 10)
+    lines.push({ key: "load", before: "Your heart was working hard at ", marked: at(heavy[0]), after: "", hl: "var(--hl-load)", span: { from: heavy[0], to: heavy[1], hl: "var(--hl-load)" } });
   const stress = longest((w) => !!w.unexplained);
-  if (stress) lines.push({ color: "var(--series-2)", text: `Stress was high at ${at(stress[0])}` });
+  if (stress)
+    lines.push({ key: "stress", before: "Stress was high at ", marked: at(stress[0]), after: "", hl: "var(--hl-stress)", span: { from: stress[0], to: stress[1], hl: "var(--hl-stress)" } });
   if (cur.sleep_before_min !== null && cur.sleep_before_min < 360)
-    lines.push({ color: "var(--sleep)", text: `You slept ${hm(cur.sleep_before_min)} before this shift` });
-  if (cur.since_break_min >= 300) lines.push({ color: "var(--critical)", text: `No break for ${hm(cur.since_break_min)}` });
-  if (!lines.length) return null;
-  return (
-    <section className="panel insights">
-      {lines.map((l) => (
-        <div key={l.text} className="insight">
-          <span className="icon" style={{ background: l.color }} />
-          {l.text}
-        </div>
-      ))}
-    </section>
-  );
+    lines.push({ key: "sleep", before: "You slept ", marked: hm(cur.sleep_before_min), after: " before this shift", hl: "var(--hl-sleep)", span: null });
+  if (cur.since_break_min >= 300)
+    lines.push({
+      key: "break", before: "No break for ", marked: hm(cur.since_break_min), after: "", hl: "var(--hl-alert)",
+      span: { from: cur.elapsed_min - cur.since_break_min, to: cur.elapsed_min, hl: "var(--hl-alert)" },
+    });
+  return lines;
 }
 
 // One question per screen.
@@ -467,7 +443,7 @@ function EndFlow({ shiftId, proposal, cancel, done }: { shiftId: string; proposa
 
   return (
     <div style={{ maxWidth: 720 }}>
-      <PageHeading eyebrow="End-of-shift review" title="Finish your shift" />
+      <PageHeading title="Finish your shift" />
       <Panel>
         <div className="steps">
           {["Confirm breaks", "Ratio", "How you feel"].map((s, i) => (
@@ -476,12 +452,12 @@ function EndFlow({ shiftId, proposal, cancel, done }: { shiftId: string; proposa
             </span>
           ))}
         </div>
-        <div className="fade-in stack" key={step}>
+        <div className="stack" key={step}>
           {step === 0 && (
             <>
               <h2>{proposal.breaks.length ? "Were these your breaks?" : "We didn’t see any breaks"}</h2>
               {proposal.breaks.map((b) => (
-                <div key={b.id} className="stack" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
+                <div key={b.id} className="stack" style={{ paddingBottom: 14, borderBottom: "1px solid var(--rule)" }}>
                   <strong style={{ fontSize: 17 }}>
                     {fmtTime(b.start_ts)} – {fmtTime(b.end_ts)}
                   </strong>
@@ -568,14 +544,18 @@ function ShiftCard({ card }: { card: Card }) {
   if (card.band === "amber" && card.recovery_band === "amber") reasons.push(`your longest stretch without a break was ${hm(card.longest_no_break_min)}`);
   if (card.band === "amber" && card.phys_band === "amber") reasons.push("physical load was heavy");
   return (
-    <div className="fade-in">
-      <Panel className="result">
-        <div className="big-dot" style={{ background: BAND_COLOR[card.band] ?? BAND_COLOR.insufficient }} />
-        <h2>{title}</h2>
-        <p className="sub" style={{ margin: "6px 0 10px" }}>
-          {reasons.length ? `Why: ${reasons.join(" and ")}.` : text}
-        </p>
-        <div className="row" style={{ justifyContent: "center" }}>
+    <div>
+      <Panel>
+        <div className="verdict">
+          <span className={`swatch dot ${card.band}`} style={card.band === "insufficient" ? undefined : { background: BAND_COLOR[card.band] }} />
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <h2>{title}</h2>
+            <p className="sub" style={{ margin: "4px 0 0" }}>
+              {reasons.length ? `Why: ${reasons.join(" and ")}.` : text}
+            </p>
+          </div>
+        </div>
+        <div className="row" style={{ marginTop: 14 }}>
           <span className="muted">
             {fmtDay(card.start_ts)} · {fmtTime(card.start_ts)}–{fmtTime(card.end_ts)}
           </span>
@@ -674,7 +654,7 @@ export function History() {
     return (
       <div style={{ maxWidth: 720 }}>
         <button className="link" onClick={() => setOpenCard(null)} style={{ marginBottom: 14 }}>
-          ‹ My shifts
+          <ArrowLeft size={16} /> My shifts
         </button>
         <ShiftCard card={openCard} />
       </div>
@@ -683,7 +663,7 @@ export function History() {
   return (
     <div style={{ maxWidth: 720 }}>
       <PageHeading
-        eyebrow="Nurse records"
+       
         title="My shifts"
         right={
           <div className="pills">
@@ -697,9 +677,9 @@ export function History() {
         }
       />
       {shown.length === 0 ? (
-        <Panel className="result">
-          <CalendarDays size={30} color="var(--teal)" />
-          <h2 style={{ marginTop: 10 }}>No shifts yet</h2>
+        <Panel className="empty">
+          <h2>No shifts yet</h2>
+          <p className="sub" style={{ margin: "6px auto 0" }}>Finished shifts appear here with their colour.</p>
         </Panel>
       ) : (
         <div className="list">
@@ -710,7 +690,9 @@ export function History() {
                 <div className="sub">{s.shift_type === "day" ? "Day shift" : "Night shift"}</div>
               </span>
               <BandChip band={s.band} />
-              <span className="chev">›</span>
+              <span className="chev">
+                <ChevronRight size={18} />
+              </span>
             </button>
           ))}
         </div>
@@ -728,7 +710,7 @@ export function Settings({ me, reload }: { me: Me; reload: () => void }) {
   const paused = !!me.paused_until && new Date(me.paused_until) > new Date();
   return (
     <>
-      <PageHeading eyebrow="Privacy by design" title="Settings & privacy" sub={`${me.display_name} · ${me.unit_name}`} />
+      <PageHeading title="Settings & privacy" sub={`${me.display_name} · ${me.unit_name}`} />
       <div className="grid-2">
         <div>
           <Panel title="Shift recording">

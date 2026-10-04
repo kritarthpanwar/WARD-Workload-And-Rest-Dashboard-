@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Activity } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { ROLE_ICON } from "@/components/ui";
 import { Role, saveSession } from "@/lib/api";
 
@@ -18,44 +18,37 @@ export default function Home() {
   const router = useRouter();
   return (
     <div className="signin">
-      <div className="brand">
-        <span className="brand-symbol">
-          <Activity size={22} />
-        </span>
-        <span>
-          ShiftLoad<span className="brand-period">.</span>
-        </span>
+      <div className="wordmark">
+        WARD <small>workload and rest dashboard</small>
       </div>
-      <div className="eyebrow">Nursing workload documentation</div>
-      <h1>Who are you?</h1>
-      <p className="sub" style={{ margin: "8px 0 24px", maxWidth: 620 }}>
-        An automatic record of how heavy each shift was and whether there was a chance to recover.
-      </p>
-      <div className="role-grid">
+      <h1 style={{ marginTop: 22 }}>
+        Every shift on the record: how <span className="mark">heavy</span> it was, and whether there was a{" "}
+        <span className="mark" style={{ ["--hl" as string]: "var(--hl-stress)" }}>
+          break
+        </span>
+        .
+      </h1>
+      <div className="who-list">
         {ROLES.map((r) => {
           const Icon = ROLE_ICON[r.role];
           return (
             <button
               key={r.uid}
-              className="role-card"
               onClick={() => {
                 saveSession({ role: r.role, uid: r.uid });
                 router.push(r.href);
               }}
             >
-              <span className="avatar">
-                <Icon size={22} />
-              </span>
-              <span>
-                <strong>{r.title}</strong>
-                <span>{r.text}</span>
-              </span>
+              <Icon size={22} />
+              <strong>{r.title}</strong>
+              <span className="what">{r.text}</span>
+              <ChevronRight size={18} />
             </button>
           );
         })}
       </div>
-      <p className="muted" style={{ marginTop: 18 }}>
-        Demo sign-in: pick a role. Real sign-in is not connected yet.
+      <p className="muted" style={{ marginTop: 16 }}>
+        Demo sign-in: pick who you are. Real sign-in is not connected yet.
       </p>
     </div>
   );

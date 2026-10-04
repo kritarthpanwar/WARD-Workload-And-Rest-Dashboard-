@@ -22,7 +22,7 @@ export default function TrusteePage() {
   if (!session) return <main />;
   return (
     <main>
-      <PageHeading eyebrow="Trustee" title="Weekly release" sub="Publishes the weekly numbers managers can see." />
+      <PageHeading title="Weekly release" sub="Publishes the weekly numbers managers can see." />
       <Panel className="trustee-panel">
         <div className="stack">
           <button

@@ -54,20 +54,20 @@ export default function ReliefPage() {
   if (!session) return <main />;
   return (
     <main>
-      <PageHeading eyebrow="Charge nurse" title="Relief requests" sub="Who is asking for relief right now." right={<Badge mode="live" />} />
+      <PageHeading title="Relief requests" sub="Who is asking for relief right now." right={<Badge mode="live" />} />
       <div style={{ maxWidth: 720 }}>
         <ErrorLine error={error} />
         {reqs === null && !error && <p className="sub">Connecting…</p>}
         {reqs?.length === 0 && (
-          <section className="panel result">
+          <section className="panel empty">
             <h2>All clear</h2>
-            <p className="sub" style={{ marginTop: 6 }}>Nobody is waiting for relief.</p>
+            <p className="sub" style={{ margin: "6px auto 0" }}>Nobody is waiting for relief.</p>
           </section>
         )}
         {reqs?.map((r) => (
           <div className="relief-item" key={r.request_id}>
             <div className="name">
-              Relief requested — {r.display_name}
+              <span className="mark">Relief requested</span> — {r.display_name}
               <div className="muted" style={{ fontWeight: 400 }}>
                 {r.unit_name} · sent to {TO[r.recipient_type] ?? r.recipient_type}
               </div>

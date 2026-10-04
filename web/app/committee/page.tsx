@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Badge, ErrorLine, More, PageHeading, Panel, useRole } from "@/components/ui";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ErrorLine, More, PageHeading, Panel, useRole } from "@/components/ui";
 import { WeeklyReport } from "@/components/WeeklyReport";
 import { fmtWeek, managerApi } from "@/lib/api";
 import type { Meta } from "../manager/page";
@@ -51,7 +52,7 @@ export default function CommitteePage() {
 
   return (
     <main>
-      <PageHeading eyebrow="Joint committee" title="Reporting gap" sub="Unit totals only." right={<Badge mode="synthetic" />} />
+      <PageHeading title="Joint committee" sub="Unit totals only." />
       <div className="pills" style={{ margin: "0 0 18px" }}>
         {meta.units.map((u) => (
           <button key={u.unit_id} className={u.unit_id === unit ? "on" : ""} onClick={() => setUnit(u.unit_id)}>
@@ -61,10 +62,9 @@ export default function CommitteePage() {
       </div>
       <ErrorLine error={error} />
 
-      <Panel>
+      <Panel title="Reporting gap" mode="synthetic">
         {gap && (
           <>
-            <div className="muted">Reporting gap</div>
             <div className="hero">
               About {gap.red_shifts_about} red shifts, about {gap.reports_sent_about} reported.
             </div>
@@ -72,7 +72,7 @@ export default function CommitteePage() {
               Over {gap.weeks.length} weeks · about {gap.relief_requests_about} relief requests
             </p>
             <div className="bar-track" style={{ height: 14, marginBottom: 6 }} title="Share of red shifts that were reported">
-              <div style={{ width: `${Math.min(100, (100 * gap.reports_sent_about) / Math.max(1, gap.red_shifts_about))}%`, background: "var(--series-1)" }} />
+              <div style={{ width: `${Math.min(100, (100 * gap.reports_sent_about) / Math.max(1, gap.red_shifts_about))}%`, background: "var(--load-4)" }} />
             </div>
           </>
         )}
@@ -99,7 +99,7 @@ export default function CommitteePage() {
                       <td>
                         <div
                           title={`${w.red_shifts_noised} red shifts`}
-                          style={{ height: 12, marginTop: 4, borderRadius: "0 4px 4px 0", background: "var(--series-1)", width: `${(100 * w.red_shifts_noised) / maxRed}%`, minWidth: w.red_shifts_noised ? 2 : 0 }}
+                          style={{ height: 12, marginTop: 4, background: "var(--load-4)", width: `${(100 * w.red_shifts_noised) / maxRed}%`, minWidth: w.red_shifts_noised ? 2 : 0 }}
                         />
                       </td>
                       <td className="num">{w.red_shifts_noised}</td>
@@ -118,16 +118,16 @@ export default function CommitteePage() {
       <div className="row" style={{ marginBottom: 12 }}>
         <div className="stepper">
           <button disabled={meta.weeks.indexOf(week) <= 0} onClick={() => setWeek(meta.weeks[meta.weeks.indexOf(week) - 1])} aria-label="Previous week">
-            ‹
+            <ChevronLeft size={18} />
           </button>
-          <span>Week of {fmtWeek(week)}</span>
+          <span className="when">Week of {fmtWeek(week)}</span>
           <button disabled={meta.weeks.indexOf(week) >= meta.weeks.length - 1} onClick={() => setWeek(meta.weeks[meta.weeks.indexOf(week) + 1])} aria-label="Next week">
-            ›
+            <ChevronRight size={18} />
           </button>
         </div>
       </div>
       {unit && week && (
-        <Panel>
+        <Panel title={`Weekly report, week of ${fmtWeek(week)}`} mode="synthetic">
           <WeeklyReport unit={unit} week={week} scenario={meta.default_scenario} full />
         </Panel>
       )}

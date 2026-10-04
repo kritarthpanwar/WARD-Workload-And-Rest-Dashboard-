@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Badge, BandChip, ErrorLine, More, PageHeading, Panel, useRole } from "@/components/ui";
+import { ChevronLeft, ChevronRight, TrendingDown, TrendingUp, TriangleAlert } from "lucide-react";
+import { BandChip, ErrorLine, More, PageHeading, Panel, useRole } from "@/components/ui";
 import { Cell, STATUS_TEXT, WeeklyReport, redRange } from "@/components/WeeklyReport";
 import { addWeeks, fmtWeek, managerApi } from "@/lib/api";
 
@@ -86,7 +87,7 @@ export default function ManagerPage() {
 
   return (
     <main>
-      <PageHeading eyebrow="Unit workload · weekly release" title="Weekly workload overview" sub="Weekly totals. No names." right={<Badge mode="synthetic" />} />
+      <PageHeading title="Weekly workload overview" sub="Weekly totals. No names." />
       <ErrorLine error={error} />
 
       <div className="row" style={{ margin: "0 0 18px", justifyContent: "space-between" }}>
@@ -99,26 +100,29 @@ export default function ManagerPage() {
         </div>
         <div className="stepper">
           <button disabled={wi <= 0} onClick={() => setWeek(meta.weeks[wi - 1])} aria-label="Previous week">
-            ‹
+            <ChevronLeft size={18} />
           </button>
-          <span>Week of {fmtWeek(week)}</span>
+          <span className="when">Week of {fmtWeek(week)}</span>
           <button disabled={wi >= meta.weeks.length - 1} onClick={() => setWeek(meta.weeks[wi + 1])} aria-label="Next week">
-            ›
+            <ChevronRight size={18} />
           </button>
         </div>
       </div>
 
-      <Panel>
+      <Panel title={`Summary, week of ${fmtWeek(week)}`} mode="synthetic">
         <WeeklyReport unit={unit} week={week} scenario={scenario} />
         {weekFlags.length > 0 && (
           <div className="stack" style={{ marginTop: 12 }}>
             {weekFlags.map((f) => (
               <div key={f.shift_type + f.metric} className="row">
                 <span className="legend" style={{ margin: 0 }}>
-                  <span className="flagdot" />
+                  <span className="pen-ring" />
                 </span>
                 <span>
-                  <strong>Unusual on {f.shift_type === "day" ? "days" : "nights"}:</strong> {f.label} — {f.ratio_rounded}
+                  <strong>Unusual on {f.shift_type === "day" ? "days" : "nights"}:</strong> {f.label},{" "}
+                  <span className="mark" style={{ ["--hl" as string]: "var(--hl-alert)" }}>
+                    {f.ratio_rounded}
+                  </span>
                 </span>
               </div>
             ))}
@@ -126,35 +130,54 @@ export default function ManagerPage() {
         )}
       </Panel>
 
-      <div className="grid-4">
-        {MEASURES.map((ms) => (
-          <button key={ms.key} className={`metric ${measure === ms.key ? "on" : ""}`} onClick={() => setMeasure(ms.key)} title={ms.help}>
-            <div className="kicker">{ms.label}</div>
-            {(["day", "night"] as const).map((s) => {
-              const c = byKey.get(`${unit}|${week}|${s}`);
-              const p = byKey.get(`${unit}|${addWeeks(week, -1)}|${s}`);
-              const ok = c?.status === "released";
-              const delta = ok && p?.status === "released" ? (c[ms.key] as number) - (p[ms.key] as number) : null;
-              return (
-                <div key={s} style={{ marginTop: 8 }}>
-                  <div className="muted">{s === "day" ? "Days" : "Nights"}</div>
-                  <div className="value" style={{ fontSize: ok ? 26 : 16, color: ok ? undefined : "var(--muted)" }}>
-                    {ok ? show(c, ms.key) : c ? HIDDEN_SHORT[c.status] : "No shifts"}
-                  </div>
-                  {delta !== null && delta !== 0 && (
-                    <div className="muted">
-                      <span className={delta > 0 ? "arrow-up" : "arrow-down"}>{Math.abs(delta)} points</span> vs last week
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </button>
-        ))}
-      </div>
+      <Panel title="This week, and change since last week" mode="synthetic">
+        <div className="scroll-x">
+          <table className="sheet-table">
+            <thead>
+              <tr>
+                <th>Measure</th>
+                <th className="num">Days</th>
+                <th className="num">Nights</th>
+              </tr>
+            </thead>
+            <tbody>
+              {MEASURES.map((ms) => (
+                <tr
+                  key={ms.key}
+                  className={`pick ${measure === ms.key ? "picked" : ""}`}
+                  onClick={() => setMeasure(ms.key)}
+                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setMeasure(ms.key))}
+                  tabIndex={0}
+                  aria-selected={measure === ms.key}
+                >
+                  <th scope="row" title={ms.help}>
+                    {ms.label}
+                  </th>
+                  {(["day", "night"] as const).map((s) => {
+                    const c = byKey.get(`${unit}|${week}|${s}`);
+                    const p = byKey.get(`${unit}|${addWeeks(week, -1)}|${s}`);
+                    const ok = c?.status === "released";
+                    const delta = ok && p?.status === "released" ? (c[ms.key] as number) - (p[ms.key] as number) : null;
+                    return (
+                      <td key={s} className="num">
+                        {ok ? <span className="val">{show(c, ms.key)}</span> : <span className="muted">{c ? HIDDEN_SHORT[c.status] : "No shifts"}</span>}
+                        {delta !== null && delta !== 0 && (
+                          <div className="delta" style={{ display: "flex", justifyContent: "flex-end" }}>
+                            {delta > 0 ? <TrendingUp size={15} /> : <TrendingDown size={15} />}
+                            {Math.abs(delta)} pts
+                          </div>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
 
-      <div className="section-title">{m.label} — last {meta.weeks.length} weeks</div>
-      <Panel>
+      <Panel title={`${m.label}, last ${meta.weeks.length} weeks`} mode="synthetic">
         <div className="pills" style={{ marginBottom: 12 }}>
           <button className={allUnits ? "" : "on"} onClick={() => setAllUnits(false)}>
             {unitName}
@@ -179,17 +202,21 @@ export default function ManagerPage() {
           <span>{m.help}:</span>
           {["0–10%", "20–30%", "40–50%", "60–70%", "80–100%"].map((label, i) => (
             <span key={label}>
-              <span className="sw" style={{ background: `var(--seq-${i + 1})` }} />
+              <span className="sw" style={{ background: `var(--load-${i + 1})` }} />
               {label}
             </span>
           ))}
           <span>
-            <span className="flagdot" />
+            <span className="pen-ring" />
             unusual week
+          </span>
+          <span>
+            <span className="sw struck" />
+            held back
           </span>
         </div>
       </Panel>
-      <More title="Why are some weeks striped?">
+      <More title="Why are some weeks struck out?">
         <p className="sub">They are held back to protect nurses, or the data is too thin.</p>
         <ul style={{ margin: 0, paddingLeft: 18 }} className="stack">
           <li><strong>Too few nurses</strong> — fewer than five contributed.</li>
@@ -199,10 +226,8 @@ export default function ManagerPage() {
         </ul>
       </More>
 
-      <div className="section-title" id="compare">Compare</div>
       <Compare meta={meta} unit={unit} scenario={scenario} />
 
-      <div className="section-title">More</div>
       <More title={`Unusual weeks for ${unitName} (${unitFlags.length})`}>
         <FlagList flags={unitFlags} />
       </More>
@@ -262,15 +287,14 @@ function Heatmap({ meta, units, byKey, flags, measure, sel, onSelect }: {
           <tbody>
             {units.map((u, ui) =>
               (["day", "night"] as const).map((shift) => {
-                const pad = ui && shift === "day" ? { paddingTop: 10 } : undefined;
                 return (
-                  <tr key={u.unit_id + shift}>
+                  <tr key={u.unit_id + shift} className={ui && shift === "day" ? "unit-start" : undefined}>
                     {units.length > 1 && shift === "day" && (
-                      <th className="unit" rowSpan={2} style={pad}>
+                      <th className="unit" rowSpan={2}>
                         {u.name}
                       </th>
                     )}
-                    <th className="shift" style={pad}>
+                    <th className="shift">
                       {shift === "day" ? "Days" : "Nights"}
                     </th>
                     {meta.weeks.map((w) => {
@@ -281,7 +305,7 @@ function Heatmap({ meta, units, byKey, flags, measure, sel, onSelect }: {
                       const title = `${u.name} · ${shift === "day" ? "days" : "nights"} · week of ${fmtWeek(w)}`;
                       const move = (e: React.MouseEvent) => setTip({ x: e.clientX, y: e.clientY, key, title });
                       return (
-                        <td key={w} style={pad}>
+                        <td key={w}>
                           <button
                             className={`cell ${released ? `s${step(c[measure] as number)}` : "hidden-cell"}${selected ? " selected" : ""}`}
                             onClick={() => onSelect(u.unit_id, w)}
@@ -344,7 +368,10 @@ function FlagList({ flags }: { flags: Flag[] }) {
               </td>
               <td>{f.label[0].toUpperCase() + f.label.slice(1)}</td>
               <td className="num">
-                <span className={`arrow-${f.direction}`}>{f.ratio_rounded}</span>
+                <span className="delta">
+                  {f.direction === "up" ? <TrendingUp size={15} /> : <TrendingDown size={15} />}
+                  {f.ratio_rounded}
+                </span>
               </td>
             </tr>
           ))}
@@ -386,8 +413,6 @@ function Compare({ meta, unit, scenario }: { meta: Meta; unit: string; scenario:
   const latest = meta.weeks[meta.weeks.length - 1];
 
   useEffect(() => {
-    setResult(null);
-    setActive(null);
     if (!others.some((u) => u.unit_id === other)) setOther(others[0]?.unit_id ?? "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unit, scenario]);
@@ -408,15 +433,21 @@ function Compare({ meta, unit, scenario }: { meta: Meta; unit: string; scenario:
     });
   };
 
+  // never an empty panel: the first comparison is already answered
+  useEffect(() => {
+    run(presets[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unit, scenario]);
+
   return (
-    <Panel>
+    <Panel title="Compare" mode="synthetic" id="compare">
       <div className="pills" style={{ marginBottom: 12 }}>
         {presets.map((p) => (
           <button key={p.key} className={active === p.key ? "on" : ""} onClick={() => run(p)}>
             {p.label}
           </button>
         ))}
-        <select value={other} onChange={(e) => setOther(e.target.value)} aria-label="Unit to compare with" style={{ borderRadius: 99 }}>
+        <select value={other} onChange={(e) => setOther(e.target.value)} aria-label="Unit to compare with">
           {others.map((u) => (
             <option key={u.unit_id} value={u.unit_id}>
               {u.name}
@@ -425,21 +456,19 @@ function Compare({ meta, unit, scenario }: { meta: Meta; unit: string; scenario:
         </select>
       </div>
       <ErrorLine error={error} />
-      {!result && !error && <p className="sub">Pick a comparison. A “month” is four whole weeks.</p>}
       {result && (
-        <div className="fade-in" key={active}>
-          <div className="muted">{result.scope}</div>
+        <div key={active}>
           <h3 style={{ fontSize: 18, margin: "4px 0 10px" }}>{result.interpretation}</h3>
           <div className="row" style={{ fontSize: 14, marginBottom: 4 }}>
             <span>
               <span className="legend" style={{ display: "inline", margin: 0 }}>
-                <span className="sw" style={{ background: "var(--series-1)" }} />
+                <span className="sw" style={{ background: "var(--load-4)" }} />
               </span>
               <strong>A</strong> {result.labels[0]}
             </span>
             <span>
               <span className="legend" style={{ display: "inline", margin: 0 }}>
-                <span className="sw" style={{ background: "var(--series-2)" }} />
+                <span className="sw" style={{ background: "repeating-linear-gradient(135deg, var(--navy) 0 4px, var(--navy-2) 4px 6px)" }} />
               </span>
               <strong>B</strong> {result.labels[1]}
             </span>
@@ -456,10 +485,10 @@ function Compare({ meta, unit, scenario }: { meta: Meta; unit: string; scenario:
                     </span>
                   )}
                 </div>
-                {([["A", r.a, "var(--series-1)"], ["B", r.b, "var(--series-2)"]] as const).map(([name, v, color]) => (
+                {([["A", r.a, "a"], ["B", r.b, "b"]] as const).map(([name, v, kind]) => (
                   <div className="line" key={name}>
                     <span className="who-label">{name}</span>
-                    <span className="track">{v !== null && <div className="fill" style={{ width: `${v}%`, background: color }} />}</span>
+                    <span className="track">{v !== null && <div className={`fill ${kind}`} style={{ width: `${v}%` }} />}</span>
                     <span className="val">{v === null ? "—" : `${v}%`}</span>
                   </div>
                 ))}
@@ -471,8 +500,8 @@ function Compare({ meta, unit, scenario }: { meta: Meta; unit: string; scenario:
             <strong>B</strong> {result.b.phys_load_band ? <BandChip band={result.b.phys_load_band} /> : "—"}
           </div>
           {result.warnings.map((w) => (
-            <p key={w.text} className="muted" style={{ marginTop: 8 }}>
-              ⚠ {w.text}
+            <p key={w.text} className="row" style={{ marginTop: 10, gap: 8 }}>
+              <TriangleAlert size={17} color="var(--warning)" /> {w.text}
             </p>
           ))}
         </div>
@@ -558,7 +587,7 @@ function Guardrail() {
       </div>
       <ErrorLine error={error} />
       {demo && (
-        <div className="fade-in stack">
+        <div className="stack">
           <div>
             <h3>1. A bad draft (canned example)</h3>
             <pre className="report">{demo.model_output.headline}</pre>

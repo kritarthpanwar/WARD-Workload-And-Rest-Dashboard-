@@ -67,10 +67,7 @@ export function WeeklyReport({ unit, week, scenario, full }: { unit: string; wee
   const cells = (["day", "night"] as const).map((s) => report.payload_json.cells[s]).filter(Boolean);
   return (
     <div className="stack">
-      <div>
-        <div className="muted">Week of {fmtWeek(report.week_start)} · summary</div>
-        <h2 style={{ marginTop: 2 }}>{n.headline}</h2>
-      </div>
+      <h2>{n.headline}</h2>
       {lines.length > 0 && (
         <ul style={{ margin: 0, paddingLeft: 18 }}>
           {lines.map((l) => (

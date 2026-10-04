@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-04T12:24:08Z",
+  "title": "Design System: WARD",
+  "extensions": {
+    "colorMeta": {
+      "teal": { "role": "primary", "displayName": "Roster Teal", "canonical": "#0f766d", "tonalRamp": ["#04302c", "#0a5a52", "#0f766d", "#1b7d72", "#63b7a9", "#a6d6cd", "#d6ebe7", "#e2f1ee"] },
+      "teal-tint": { "role": "primary", "displayName": "Teal Wash", "canonical": "#e2f1ee" },
+      "load-1": { "role": "primary", "displayName": "Load 1, lightest", "canonical": "#d6ebe7" },
+      "load-2": { "role": "primary", "displayName": "Load 2", "canonical": "#a6d6cd" },
+      "load-3": { "role": "primary", "displayName": "Load 3", "canonical": "#63b7a9" },
+      "load-4": { "role": "primary", "displayName": "Load 4", "canonical": "#1b7d72" },
+      "load-5": { "role": "primary", "displayName": "Load 5, heaviest", "canonical": "#0a5a52" },
+      "navy": { "role": "secondary", "displayName": "Shell Navy", "canonical": "#173248", "tonalRamp": ["#0a141d", "#102435", "#173248", "#24465f", "#36566d", "#6d899d", "#a9bccb", "#e9f0f5"] },
+      "navy-2": { "role": "secondary", "displayName": "Shell Navy, hover", "canonical": "#24465f" },
+      "navy-rule": { "role": "secondary", "displayName": "Shell Rule", "canonical": "#36566d" },
+      "navy-ink": { "role": "secondary", "displayName": "Shell Ink", "canonical": "#e9f0f5" },
+      "navy-muted": { "role": "secondary", "displayName": "Shell Muted", "canonical": "#a9bccb" },
+      "hl-load": { "role": "tertiary", "displayName": "Teal Highlighter (load)", "canonical": "rgba(22, 160, 145, 0.38)" },
+      "hl-stress": { "role": "tertiary", "displayName": "Amber Highlighter (stress)", "canonical": "rgba(240, 176, 32, 0.46)" },
+      "hl-sleep": { "role": "tertiary", "displayName": "Violet Highlighter (sleep)", "canonical": "rgba(140, 108, 214, 0.3)" },
+      "hl-alert": { "role": "tertiary", "displayName": "Red Highlighter (alert)", "canonical": "rgba(214, 72, 68, 0.24)" },
+      "pen": { "role": "tertiary", "displayName": "Red Pen", "canonical": "#b23c3a", "tonalRamp": ["#3a1110", "#6b2221", "#932f2d", "#b23c3a", "#d0605d", "#e59996", "#f4cfcd", "#fbeceb"] },
+      "pen-tint": { "role": "tertiary", "displayName": "Pen Wash", "canonical": "#fbeceb" },
+      "good": { "role": "tertiary", "displayName": "Band Green", "canonical": "#2c8550", "tonalRamp": ["#0d2e1b", "#184d2d", "#25693d", "#2c8550", "#52a873", "#8ccba4", "#c4e5d0", "#dff0e4"] },
+      "warning": { "role": "tertiary", "displayName": "Band Amber", "canonical": "#b07a12", "tonalRamp": ["#3a2804", "#634508", "#8a5f0d", "#b07a12", "#c98a12", "#e3b55a", "#f1d9a6", "#faf0d9"] },
+      "critical": { "role": "tertiary", "displayName": "Band Red", "canonical": "#b23c3a" },
+      "nodata": { "role": "neutral", "displayName": "Struck Box Stroke", "canonical": "#a9b7c2" },
+      "stress": { "role": "tertiary", "displayName": "Stress Amber", "canonical": "#c98a12" },
+      "sleep": { "role": "tertiary", "displayName": "Sleep Violet", "canonical": "#6f55b5", "tonalRamp": ["#221740", "#3d2b70", "#5a3f97", "#6f55b5", "#8c6cd6", "#b3a0ef", "#d6cbf3", "#e9e3f7"] },
+      "live-bg": { "role": "tertiary", "displayName": "LIVE badge ground", "canonical": "#dff0e4" },
+      "live-ink": { "role": "tertiary", "displayName": "LIVE badge ink", "canonical": "#25693d" },
+      "replay-bg": { "role": "neutral", "displayName": "REPLAY badge ground", "canonical": "#e3e9ee" },
+      "replay-ink": { "role": "neutral", "displayName": "REPLAY badge ink", "canonical": "#3c5163" },
+      "synthetic-bg": { "role": "tertiary", "displayName": "SYNTHETIC badge ground", "canonical": "#e9e3f7" },
+      "synthetic-ink": { "role": "tertiary", "displayName": "SYNTHETIC badge ink", "canonical": "#5a3f97" },
+      "paper": { "role": "neutral", "displayName": "Roster Paper", "canonical": "#e9eef2", "tonalRamp": ["#0b1015", "#18212a", "#2c3945", "#586d7e", "#a9b7c2", "#c3cfd8", "#dfe7ec", "#e9eef2"] },
+      "sheet": { "role": "neutral", "displayName": "Sheet", "canonical": "#fcfdfd" },
+      "tint": { "role": "neutral", "displayName": "Sheet Tint", "canonical": "#f2f6f8" },
+      "rule": { "role": "neutral", "displayName": "Rule", "canonical": "#c3cfd8" },
+      "rule-soft": { "role": "neutral", "displayName": "Soft Rule", "canonical": "#dfe7ec" },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#14283a", "tonalRamp": ["#0a141d", "#14283a", "#24394b", "#3c5163", "#586d7e", "#94a6b4", "#c2cfd9", "#edf2f6"] },
+      "ink-2": { "role": "neutral", "displayName": "Second Ink", "canonical": "#3c5163" },
+      "muted": { "role": "neutral", "displayName": "Muted", "canonical": "#586d7e" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display figure", "purpose": "The one large quantity on a sheet (time since last break). Wide, tabular; unit set beside it in body face." },
+      "headline": { "displayName": "Page heading", "purpose": "One per page, on a 2px ink rule. Also the shift verdict." },
+      "title": { "displayName": "Section title", "purpose": "Section headings outside a panel." },
+      "statement": { "displayName": "Statement", "purpose": "Highlight sentences under the roster; names in relief requests." },
+      "figure": { "displayName": "Figure", "purpose": "Values in sheet tables and week cells. Wide, tabular." },
+      "body": { "displayName": "Body", "purpose": "Sentences, capped at 70ch. 700 for row heads and button text." },
+      "body-small": { "displayName": "Body small", "purpose": "Legends, keys, deltas, footer." },
+      "label": { "displayName": "Column head", "purpose": "Narrow uppercase caps for panel heads, table heads, roster row labels and hours." },
+      "wordmark": { "displayName": "Wordmark", "purpose": "WARD, extra wide, in the shell and on sign-in." }
+    },
+    "shadows": [
+      { "name": "tooltip-lift", "value": "0 6px 18px rgba(8, 18, 28, 0.25)", "purpose": "Hover readout over roster and week cells." },
+      { "name": "drawer-edge", "value": "14px 0 34px rgba(8, 18, 28, 0.3)", "purpose": "Sidebar when it slides over content below 1000px." },
+      { "name": "cell-hover-ring", "value": "inset 0 0 0 2px color-mix(in srgb, var(--ink) 45%, transparent)", "purpose": "Week cell under the pointer." }
+    ],
+    "motion": [
+      { "name": "ease", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Drawer slide (0.22s), toggle thumb and chevron (0.18s), highlighter swipe (0.42s)." },
+      { "name": "state", "value": "0.15s", "purpose": "Background, colour and border changes on buttons and nav items." },
+      { "name": "swipe", "value": "clip-path inset(0 100% 0 0) to inset(0) over 0.42s", "purpose": "Highlighter wipes in from the left across the roster." },
+      { "name": "reduced-motion", "value": "animation: none; transition: none", "purpose": "All motion is removed under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "split-stack", "value": "1100px" },
+      { "name": "drawer", "value": "1000px" },
+      { "name": "grid-stack", "value": "860px" },
+      { "name": "signin-stack", "value": "620px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one teal action on a sheet: request relief, confirm, continue.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Request relief <svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button>",
+      "css": ".ds-btn { min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 1px solid var(--ink); border-radius: var(--radius); background: var(--sheet); color: var(--ink); font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; } .ds-btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; } .ds-btn-primary { background: var(--teal); border-color: var(--teal); color: var(--on-teal); } .ds-btn-primary:hover { background: color-mix(in srgb, var(--teal) 88%, var(--ink)); }"
+    },
+    {
+      "name": "Default Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Ink-outlined sheet button for secondary actions such as End shift.",
+      "html": "<button class=\"ds-btn-default\">End shift</button>",
+      "css": ".ds-btn-default { min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center; gap: 9px; border: 1px solid var(--ink); border-radius: var(--radius); background: var(--sheet); color: var(--ink); font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem; cursor: pointer; transition: background 0.15s; } .ds-btn-default:hover { background: var(--tint); } .ds-btn-default:active { background: var(--rule-soft); } .ds-btn-default:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Red pen outline for withdrawal and other irreversible actions.",
+      "html": "<button class=\"ds-btn-danger\">Withdraw</button>",
+      "css": ".ds-btn-danger { min-height: 44px; padding: 0 16px; border: 1px solid var(--pen); border-radius: var(--radius); background: var(--sheet); color: var(--pen); font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem; cursor: pointer; transition: background 0.15s; } .ds-btn-danger:hover { background: var(--pen-tint); } .ds-btn-danger:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }"
+    },
+    {
+      "name": "Sheet (panel)",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "A sheet of the roster: tint head band with narrow-caps title and provenance badge, then content.",
+      "html": "<section class=\"ds-panel\"><div class=\"ds-panel-head\"><h2>Day sheet</h2><span class=\"ds-spacer\"></span><span class=\"ds-badge\">REPLAY · SIMULATED</span></div><p>Stress was high at <span class=\"ds-mark\">10:50</span></p></section>",
+      "css": ".ds-panel { background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius); padding: 20px; color: var(--ink); font-family: var(--font-ui); } .ds-panel-head { display: flex; align-items: center; gap: 10px; margin: -20px -20px 18px; padding: 11px 20px; border-bottom: 1px solid var(--rule); background: var(--tint); border-radius: var(--radius) var(--radius) 0 0; } .ds-panel-head h2 { margin: 0; font-family: var(--font-head); font-stretch: 78%; font-weight: 650; font-size: 0.875rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-2); } .ds-spacer { flex: 1; } .ds-badge { font-family: var(--font-head); font-stretch: 78%; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.09em; padding: 3px 8px; border-radius: 2px; background: var(--replay-bg); color: var(--replay-ink); white-space: nowrap; } .ds-panel p { margin: 0; font-family: var(--font-head); font-size: 1.25rem; font-weight: 650; letter-spacing: -0.012em; line-height: 1.3; } .ds-mark { background-image: linear-gradient(var(--hl-stress), var(--hl-stress)); background-repeat: no-repeat; background-size: 100% 78%; background-position: 0 62%; padding: 0 0.22em; margin: 0 -0.08em; border-radius: 2px 7px 3px 6px; }"
+    },
+    {
+      "name": "Provenance Badges",
+      "kind": "chip",
+      "refersTo": "badge-replay",
+      "description": "Every panel says where its data comes from: LIVE, REPLAY or SYNTHETIC.",
+      "html": "<span class=\"ds-pb ds-pb-live\">LIVE</span> <span class=\"ds-pb\">REPLAY</span> <span class=\"ds-pb ds-pb-syn\">SYNTHETIC</span>",
+      "css": ".ds-pb { display: inline-block; font-family: var(--font-head); font-stretch: 78%; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.09em; padding: 3px 8px; border-radius: 2px; white-space: nowrap; background: var(--replay-bg); color: var(--replay-ink); } .ds-pb-live { background: var(--live-bg); color: var(--live-ink); } .ds-pb-syn { background: var(--synthetic-bg); color: var(--synthetic-ink); }"
+    },
+    {
+      "name": "Band Chip",
+      "kind": "chip",
+      "refersTo": "band-chip",
+      "description": "Shift band as a square plus a text label; not enough data is a struck outlined box.",
+      "html": "<span class=\"ds-chip\"><span class=\"ds-dot\" style=\"background:var(--good)\"></span>Green</span> <span class=\"ds-chip\"><span class=\"ds-dot\" style=\"background:var(--warning)\"></span>Amber</span> <span class=\"ds-chip\"><span class=\"ds-dot\" style=\"background:var(--critical)\"></span>Red</span> <span class=\"ds-chip\"><span class=\"ds-dot ds-dot-none\"></span>Not enough data</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 7px; margin-right: 14px; font-family: var(--font-ui); font-size: 0.875rem; font-weight: 700; color: var(--ink); white-space: nowrap; } .ds-dot { width: 11px; height: 11px; border-radius: 2px; } .ds-dot-none { background: linear-gradient(to top right, transparent calc(50% - 1px), var(--muted) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)); border: 1px solid var(--muted); }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Form line: rule border with an ink bottom edge.",
+      "html": "<label class=\"ds-field\">Note<input class=\"ds-input\" type=\"text\" placeholder=\"Note (optional)\"></label>",
+      "css": ".ds-field { display: block; font-family: var(--font-ui); font-weight: 700; font-size: 0.9375rem; color: var(--ink); } .ds-input { display: block; width: 100%; min-height: 46px; margin-top: 6px; padding: 10px 12px; border: 1px solid var(--rule); border-bottom-color: var(--ink); border-radius: var(--radius); background: var(--sheet); color: var(--ink); font: inherit; font-weight: 400; } .ds-input::placeholder { color: var(--muted); } .ds-input:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Navy shell; the active item becomes the paper of the page it opens.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-active\" href=\"#\"><svg width=\"19\" height=\"19\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2\"/></svg>My shift</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"19\" height=\"19\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"/><path d=\"M3 3v5h5\"/><path d=\"M12 7v5l4 2\"/></svg>My shifts</a></nav>",
+      "css": ".ds-nav { width: 248px; background: var(--navy); padding: 10px 0; } .ds-nav-item { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 0 22px; color: var(--navy-muted); font-family: var(--font-ui); font-size: 1rem; font-weight: 500; text-decoration: none; transition: background 0.15s, color 0.15s; } .ds-nav-item:hover { background: var(--navy-2); color: var(--navy-ink); } .ds-nav-item:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; } .ds-nav-active, .ds-nav-active:hover { background: var(--paper); color: var(--ink); font-weight: 700; }"
+    },
+    {
+      "name": "Roster Tabs",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "Index tabs along an ink rule; the selected tab is ink.",
+      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab ds-tab-on\">4 West Med-Surg</button><button class=\"ds-tab\">5 East Med-Surg</button><button class=\"ds-tab\">ER</button></div>",
+      "css": ".ds-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--ink); } .ds-tab { min-height: 40px; padding: 0 14px; border: 1px solid transparent; border-bottom: none; border-radius: var(--radius) var(--radius) 0 0; background: transparent; color: var(--ink-2); font-family: var(--font-ui); font-size: 0.9375rem; font-weight: 500; white-space: nowrap; cursor: pointer; transition: background 0.15s, color 0.15s; } .ds-tab:hover { background: var(--tint); color: var(--ink); } .ds-tab:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; } .ds-tab-on, .ds-tab-on:hover { background: var(--ink); color: var(--sheet); font-weight: 700; }"
+    },
+    {
+      "name": "Week Cells",
+      "kind": "custom",
+      "refersTo": "week-cell",
+      "description": "The shared cell at week scale: load-ramp fill, red pen ring for an unusual week, struck box when held back.",
+      "html": "<div class=\"ds-cells\"><span class=\"ds-cell\" style=\"background:var(--load-1);color:var(--on-load-light)\">0–10</span><span class=\"ds-cell\" style=\"background:var(--load-2);color:var(--on-load-light)\">20–30<i class=\"ds-flag\"></i></span><span class=\"ds-cell\" style=\"background:var(--load-3);color:var(--on-load-light)\">40–50</span><span class=\"ds-cell ds-cell-held\"></span><span class=\"ds-cell\" style=\"background:var(--load-5);color:var(--on-load-dark)\">80</span></div>",
+      "css": ".ds-cells { display: inline-flex; border: 1px solid var(--rule); border-left-color: var(--ink); } .ds-cell { position: relative; width: 62px; height: 44px; display: flex; align-items: center; justify-content: center; border-right: 1px solid var(--rule); font-family: var(--font-head); font-weight: 650; font-size: 0.875rem; font-variant-numeric: tabular-nums; } .ds-cell:last-child { border-right: none; } .ds-cell:hover { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ink) 45%, transparent); } .ds-cell-held { background: linear-gradient(to top right, transparent calc(50% - 0.5px), var(--nodata) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)), var(--sheet); } .ds-flag { position: absolute; inset: 3px 1px; border: 2px solid var(--pen); border-radius: 50% 46% 52% 48% / 54% 50% 48% 46%; transform: rotate(-4deg); pointer-events: none; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Shift Roster",
+    "overview": "A shift is a row on the ward roster. WARD is that paper roster made exact: hours are ruled columns, load is filled cells, and a highlighter lands on the stretch a sentence is talking about. The ground is cool roster paper, the working surfaces are white ruled sheets with near-square corners, and a committed navy shell holds the navigation. Nothing floats; everything sits on a rule.\n\nThe system is built for a glance. Each screen leads with a plain statement in a heading face (\"Stress was high at 10:50\"), and the proof sits directly beside or beneath it as marked cells. Density is moderate: one main sheet, a narrow side column, large touch targets (44px and up) for nurses. Light and dark themes both ship; dark is the same roster on a night desk, set by a `dark` class on the root element.\n\nThe user pinned teal and navy and the sidebar and page structure, and rejected two feelings outright: cold and clinical, and corporate and bland. Warmth comes from the handmade devices (highlighter marks with uneven corners, a red pen ring drawn slightly off-true), not from decoration.",
+    "keyCharacteristics": [
+      "Cool paper ground, white sheets, one-pixel rules, 3px corners.",
+      "Navy shell with an active item that turns into the paper it opens.",
+      "Three highlighters with fixed jobs (teal load, amber stress, violet sleep) and a red pen for alerts.",
+      "One shared cell module: five-minute cells in the shift row, week cells in the manager grid, hour boxes in the break tally.",
+      "Missing data is a struck empty box, never a colour.",
+      "Statements in Archivo, sentences in Atkinson Hyperlegible Next; rank by weight, width, case and rule on a short scale."
+    ],
+    "rules": [
+      { "name": "The Three Highlighters Rule", "body": "Teal is load, amber is stress, violet is sleep. A highlighter never changes jobs and never decorates.", "section": "colors" },
+      { "name": "The Red Pen Rule", "body": "Red appears only where something needs attention: a ring, a strike, a red band, an error. It is never a fill for ordinary data.", "section": "colors" },
+      { "name": "The Struck Box Rule", "body": "Missing or held-back data is an empty box with one diagonal stroke in `nodata`. It never takes a colour from the load ramp or the band set, and never reads as green.", "section": "colors" },
+      { "name": "The Width Is The Voice Rule", "body": "Narrow caps name a column, wide tabular digits state a quantity, normal width makes a statement. Do not introduce a second display family; change the width.", "section": "typography" },
+      { "name": "The Statement First Rule", "body": "A panel says its finding as one plain sentence in the Statement or Headline role. Explanations go behind a collapsed \"more\" section, not into small print under the figure.", "section": "typography" },
+      { "name": "The Flat Sheet Rule", "body": "Sheets, buttons and inputs carry no shadow at rest or on hover. Only things that leave the page (tooltip, drawer) cast one.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do put every claim beside its proof: a statement, then the marked cells it refers to.",
+      "Do keep each highlighter to its job (teal load, amber stress, violet sleep) and red to alerts.",
+      "Do draw missing or held-back data as a struck empty box, with a text label wherever a state is named.",
+      "Do build new data displays from the shared cell on ruled tracks with an ink leading edge.",
+      "Do give every panel a provenance badge and keep the footer disclaimer on every page.",
+      "Do set quantities in wide tabular Archivo and column heads in narrow caps; write sentences in Atkinson Hyperlegible Next.",
+      "Do ship every new surface in both themes by using the tokens, never a literal colour.",
+      "Do keep nurse-facing controls at 44px or taller."
+    ],
+    "donts": [
+      "Don't make it cold and clinical or corporate and bland (both rejected by the user).",
+      "Don't replace a plain statement with small explanatory text; say it briefly or put it behind \"more\".",
+      "Don't change the teal and navy pairing or the sidebar and page structure; both are pinned by the user.",
+      "Don't fall back to the health-dashboard arrangement of floating metric cards, rings and line charts.",
+      "Don't add shadows to sheets, buttons or inputs, or round corners past 3px outside the toggle.",
+      "Don't show a gap as a break, or missing data in green.",
+      "Don't use a highlighter or the pen ring as decoration; each mark must point at something."
+    ]
+  }
+}

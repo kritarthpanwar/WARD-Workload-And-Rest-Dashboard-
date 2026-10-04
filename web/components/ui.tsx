@@ -38,15 +38,14 @@ export function Badge({ mode, note }: { mode: Mode; note?: string }) {
   );
 }
 
-export function PageHeading({ eyebrow, title, sub, right }: { eyebrow?: string; title: string; sub?: ReactNode; right?: ReactNode }) {
+export function PageHeading({ title, sub, right }: { title: string; sub?: ReactNode; right?: ReactNode }) {
   return (
     <div className="page-heading">
       <div>
-        {eyebrow && <div className="eyebrow">{eyebrow}</div>}
         <h1>{title}</h1>
         {sub && <p className="sub">{sub}</p>}
       </div>
-      {right}
+      {right && <div className="right">{right}</div>}
     </div>
   );
 }
@@ -114,25 +113,6 @@ export function BandChip({ band, big, label }: { band: string | null; big?: bool
       <span className={`dot ${b}`} />
       {label ?? BAND_LABEL[b] ?? b}
     </span>
-  );
-}
-
-/** Progress ring with a value in the middle. */
-export function Ring({ fraction, color, size = 116, children }: { fraction: number; color: string; size?: number; children: ReactNode }) {
-  const stroke = 10;
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  const f = Math.min(Math.max(fraction, 0), 1);
-  return (
-    <div style={{ position: "relative", width: size, height: size, flex: "none" }}>
-      <svg className="ring" width={size} height={size} style={{ transform: "rotate(-90deg)" }} aria-hidden>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--raised)" strokeWidth={stroke} />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - f)} />
-      </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", lineHeight: 1.1 }}>
-        {children}
-      </div>
-    </div>
   );
 }
 
@@ -231,23 +211,20 @@ export function Shell({ children }: { children: ReactNode }) {
       {signedIn && nav && session && (
         <>
           {open && <div className="backdrop" onClick={() => setOpen(false)} />}
-          <aside className={`sidebar ${open ? "open" : ""}`} aria-label="ShiftLoad navigation">
-            <Link href="/" className="brand">
-              <span className="brand-symbol">
-                <Activity size={21} />
-              </span>
-              <span>
-                ShiftLoad<span className="brand-period">.</span>
-              </span>
+          <aside className={`sidebar ${open ? "open" : ""}`} aria-label="WARD navigation">
+            <Link href="/" className="wordmark">
+              WARD <small>workload and rest</small>
             </Link>
-            <span className="role-chip">{ROLE_LABEL[session.role]}</span>
-            <div className="nav-section">{nav.section.toUpperCase()}</div>
-            <nav>
+            <div className="on-as">
+              Signed in as
+              <strong>{ROLE_LABEL[session.role]}</strong>
+            </div>
+            <nav aria-label={nav.section}>
               {nav.items.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link key={item.href} href={item.href} className={`nav-item ${isActive(item.href) ? "active" : ""}`} onClick={() => setHash(item.href.includes("#") ? `#${item.href.split("#")[1]}` : "")}>
-                    <Icon size={20} />
+                    <Icon size={19} />
                     {item.label}
                   </Link>
                 );
@@ -268,10 +245,7 @@ export function Shell({ children }: { children: ReactNode }) {
                 <LogOut size={19} />
                 Switch role
               </button>
-              <div className="sidebar-note">
-                <ShieldCheck size={16} style={{ flex: "none", marginTop: 2 }} />
-                Demo sign-in. Real sign-in is not connected yet.
-              </div>
+              <div className="sidebar-note">Demo sign-in. Real sign-in is not connected yet.</div>
             </div>
           </aside>
         </>
@@ -282,16 +256,11 @@ export function Shell({ children }: { children: ReactNode }) {
             <button className="icon-button" aria-label="Open navigation" onClick={() => setOpen(true)}>
               <Menu size={22} />
             </button>
-            <span className="wordmark">
-              ShiftLoad<span style={{ color: "var(--teal)" }}>.</span>
-            </span>
+            <span className="wordmark">WARD</span>
           </header>
         )}
         {children}
-        <footer className="disclaimer">
-          <ShieldCheck size={15} />
-          Workload documentation tool — not a medical device.
-        </footer>
+        <footer className="disclaimer">Workload documentation tool — not a medical device.</footer>
       </div>
     </div>
   );
