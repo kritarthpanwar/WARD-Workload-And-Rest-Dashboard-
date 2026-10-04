@@ -71,7 +71,8 @@ def shift_now(conn, shift: dict) -> datetime:
         return shift["planned_end_ts"]
     if shift["data_mode"] == "replay":
         last = pipeline.latest_minute(conn, shift["nurse_pid"], shift["start_ts"])
-        return last + timedelta(minutes=1) if last else shift["start_ts"]
+        # never past the planned end: later minutes belong to the days after the shift
+        return min(last + timedelta(minutes=1), shift["planned_end_ts"]) if last else shift["start_ts"]
     return min(datetime.now(timezone.utc), shift["start_ts"] + timedelta(hours=16))
 
 
@@ -285,11 +286,23 @@ def shift_clock(body: ClockedShift, user: User = Depends(nurse_only)):
     with pool.connection() as conn:
         n = get_nurse(conn, user)
         pid = n["nurse_pid"]
+        if user.demo:
+            # a demo gets run again and again: an earlier shift over the same time makes way
+            conn.execute(
+                """DELETE FROM core.break_events WHERE shift_id IN (SELECT shift_id FROM core.shifts
+                   WHERE nurse_pid = %s AND finalized AND start_ts < %s AND end_ts > %s)""", (pid, end, start))
+            conn.execute("DELETE FROM core.shifts WHERE nurse_pid = %s AND finalized AND start_ts < %s AND end_ts > %s",
+                         (pid, end, start))
         if conn.execute("SELECT 1 FROM core.shifts WHERE nurse_pid = %s AND finalized AND start_ts < %s AND end_ts > %s",
                         (pid, end, start)).fetchone():
             raise HTTPException(409, "a finished shift already covers this time")
         have = conn.execute("SELECT count(*) AS n FROM core.minutes WHERE nurse_pid = %s AND ts >= %s AND ts < %s AND hr_n > 0",
                             (pid, start, end)).fetchone()["n"]
+        mode = "recorded"
+        if user.demo:
+            # demo logins have no watch: their shifts are always filled with the simulated day, and say so
+            have = fill_simulated(conn, n, start, end)
+            mode = "replay"
         if have == 0:
             raise HTTPException(409, "no watch data has been uploaded for that time yet")
         # entering the times again replaces an unfinished earlier attempt
@@ -300,12 +313,42 @@ def shift_clock(body: ClockedShift, user: User = Depends(nurse_only)):
         device = conn.execute("SELECT source_device FROM core.sleep_sessions WHERE nurse_pid = %s LIMIT 1", (pid,)).fetchone()
         conn.execute(
             """INSERT INTO core.shifts (shift_id, nurse_pid, unit_id, start_ts, planned_end_ts, shift_type,
-                   source_device, data_mode) VALUES (%s, %s, %s, %s, %s, %s, %s, 'recorded')""",
-            (shift_id, pid, n["unit_id"], start, end, pipeline.shift_type_for(start), device["source_device"] if device else None))
+                   source_device, data_mode) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+            (shift_id, pid, n["unit_id"], start, end, pipeline.shift_type_for(start),
+             device["source_device"] if device else None, mode))
         shift = active_shift(conn, pid)
         c = pipeline.compute(conn, n, shift, end)
         pipeline.write_windows(conn, pid, shift, c["windows"])
-    return {"shift_id": shift_id, "minutes_with_data": have, "minutes": int(hours * 60)}
+    return {"shift_id": shift_id, "minutes_with_data": have, "minutes": int(hours * 60), "simulated": mode == "replay"}
+
+
+def fill_simulated(conn, nurse: dict, start: datetime, end: datetime) -> int:
+    """Replace a stretch with the simulated day, stretched or squeezed to fit. Returns minutes with heart rate."""
+    if not REPLAY_FILE.exists():
+        raise HTTPException(500, "recorded day missing: run scripts/make_replay_day.py")
+    day = json.loads(REPLAY_FILE.read_text())
+    pid = nurse["nurse_pid"]
+    length = int((end - start).total_seconds() // 60)
+    source = day["minutes"]
+    samples = []
+    for i in range(length):
+        m = source[i * len(source) // length]
+        if m["hr"] is not None:
+            ts = start + timedelta(minutes=i)
+            samples.append({"ts": ts, "type": "hr", "value": m["hr"]})
+            samples.append({"ts": ts, "type": "steps", "value": m["steps"]})
+    conn.execute("DELETE FROM core.minutes WHERE nurse_pid = %s AND ts >= %s AND ts < %s", (pid, start, end))
+    pipeline.ingest(conn, pid, samples)
+    conn.execute("DELETE FROM core.sleep_sessions WHERE nurse_pid = %s AND start_ts >= %s AND start_ts < %s",
+                 (pid, start - timedelta(hours=24), start))
+    pipeline.store_sleep(conn, pid, [
+        {"start_ts": start + timedelta(minutes=s["start_min"]), "end_ts": start + timedelta(minutes=s["end_min"])}
+        for s in day.get("sleep", [])
+    ], day["source_device"])
+    if nurse["hr_rest"] is None:
+        nurse["hr_rest"] = float(day["resting_hr"])
+        conn.execute("UPDATE core.nurses SET hr_rest = %s WHERE nurse_pid = %s", (nurse["hr_rest"], pid))
+    return len(samples) // 2
 
 
 @app.post("/shifts/{shift_id}/correct")

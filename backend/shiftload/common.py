@@ -20,6 +20,7 @@ ROLES = {"nurse", "charge_nurse", "manager", "joint_committee", "admin"}
 class User:
     role: str
     uid: str
+    demo: bool = False      # signed in with a demo login, not a real account
 
 
 def make_pool(url: str) -> ConnectionPool:
@@ -69,7 +70,7 @@ def resolve_user(pool: ConnectionPool, header: str | None) -> User:
         parts = token.split(":", 2)
         if len(parts) != 3 or parts[1] not in ROLES or not parts[2]:
             raise HTTPException(401, "missing or invalid token")
-        return User(role=parts[1], uid=parts[2])
+        return User(role=parts[1], uid=parts[2], demo=True)
     if not token or config.AUTH_MODE == "dev":
         raise HTTPException(401, "missing or invalid token")
     claims = verify_firebase(token)
