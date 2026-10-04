@@ -12,6 +12,9 @@ class Api(private val prefs: Prefs) {
     companion object {
         // Public web key of the WARD Firebase project: it identifies the project and is not a secret.
         private const val FIREBASE_KEY = "AIzaSyAAPCP2_RA5JB1oli1AOyWASMVhLClOhlg"
+        // the same demo nurse the website's demo login uses
+        private const val DEMO_TOKEN = "dev:nurse:demo-nurse"
+        const val DEMO_NAME = "Demo nurse"
     }
 
     private fun request(method: String, url: String, body: String?, contentType: String, token: String? = null): Pair<Int, String> {
@@ -48,6 +51,15 @@ class Api(private val prefs: Prefs) {
         if (role != "nurse") { prefs.signOut(); throw ApiError("This account is not set up as a nurse yet. Ask an administrator.") }
     }
 
+    /** Demo login: no password. Only works while the server has demo logins switched on. */
+    fun signInDemo() {
+        val (code, text) = request("GET", prefs.serverUrl + "/me", null, "", DEMO_TOKEN)
+        if (code != 200) throw ApiError(detail(text, "Demo logins are switched off on this server."))
+        prefs.signOut()
+        prefs.email = DEMO_NAME
+        prefs.demo = true
+    }
+
     private fun store(idToken: String, refreshToken: String, expiresInSec: Long) {
         prefs.idToken = idToken
         prefs.refreshToken = refreshToken
@@ -55,6 +67,7 @@ class Api(private val prefs: Prefs) {
     }
 
     private fun token(): String {
+        if (prefs.demo) return DEMO_TOKEN
         if (System.currentTimeMillis() < prefs.tokenExpiresAt) return prefs.idToken
         val form = "grant_type=refresh_token&refresh_token=" + URLEncoder.encode(prefs.refreshToken, "UTF-8")
         val (code, text) = request("POST", "https://securetoken.googleapis.com/v1/token?key=$FIREBASE_KEY", form, "application/x-www-form-urlencoded")

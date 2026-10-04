@@ -30,7 +30,12 @@ class Prefs(context: Context) {
         get() = sp.getString("lastUpload", "Nothing uploaded yet") ?: ""
         set(v) = sp.edit().putString("lastUpload", v).apply()
 
-    val signedIn: Boolean get() = refreshToken.isNotEmpty()
+    /** Demo login: no password, the server's demo nurse. */
+    var demo: Boolean
+        get() = sp.getBoolean("demo", false)
+        set(v) = sp.edit().putBoolean("demo", v).apply()
 
-    fun signOut() = sp.edit().remove("idToken").remove("refreshToken").remove("tokenExpiresAt").apply()
+    val signedIn: Boolean get() = demo || refreshToken.isNotEmpty()
+
+    fun signOut() = sp.edit().remove("idToken").remove("refreshToken").remove("tokenExpiresAt").remove("demo").apply()
 }

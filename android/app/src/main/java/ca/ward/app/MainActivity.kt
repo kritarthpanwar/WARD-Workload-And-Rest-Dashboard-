@@ -100,7 +100,7 @@ private fun BigButton(text: String, enabled: Boolean = true, onClick: () -> Unit
 private fun SignIn(prefs: Prefs, done: () -> Unit) {
     val scope = rememberCoroutineScope()
     var server by remember { mutableStateOf(prefs.serverUrl.ifEmpty { "http://" }) }
-    var email by remember { mutableStateOf(prefs.email) }
+    var email by remember { mutableStateOf(prefs.email.takeIf { it != Api.DEMO_NAME } ?: "") }
     var password by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -128,6 +128,28 @@ private fun SignIn(prefs: Prefs, done: () -> Unit) {
                 }
             }
         }
+        OutlinedButton(
+            onClick = {
+                busy = true
+                error = null
+                scope.launch {
+                    try {
+                        withContext(Dispatchers.IO) {
+                            prefs.serverUrl = server
+                            Api(prefs).signInDemo()
+                        }
+                        done()
+                    } catch (e: Exception) {
+                        error = if (e is ApiError) e.message else "Couldn't reach the server. Check the address and that the phone is on the same Wi-Fi."
+                    } finally {
+                        busy = false
+                    }
+                }
+            },
+            enabled = !busy && server.length > 8,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
+            shape = RoundedCornerShape(14.dp),
+        ) { Text("Demo login (no password)", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Ink) }
     }
 }
 
@@ -153,6 +175,7 @@ private fun Home(prefs: Prefs, signedOut: () -> Unit) {
     var allowed by remember { mutableStateOf(false) }
     var uploadStatus by remember { mutableStateOf(prefs.lastUpload) }
     var shiftStatus by remember { mutableStateOf("") }
+    var demoStatus by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var hour by remember { mutableStateOf(prefs.uploadHour) }
     var day by remember { mutableStateOf(0) }       // 0 = today, 1 = yesterday
@@ -226,6 +249,20 @@ private fun Home(prefs: Prefs, signedOut: () -> Unit) {
             }
         }
         if (shiftStatus.isNotEmpty()) Text(shiftStatus, fontSize = 16.sp)
+    }
+
+    Sheet {
+        Text("Demo", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text("No watch data yet? Play back a simulated day.", fontSize = 16.sp)
+        fun play(speed: Int) = run({ demoStatus = it }, "Starting…") {
+            withContext(Dispatchers.IO) { Api(prefs).post("/replay/start", JSONObject().put("speed", speed)) }
+            "Playing a simulated day. Open WARD in a browser to watch it."
+        }
+        BigButton("Play a recorded day", enabled = !busy) { play(8) }
+        OutlinedButton(onClick = { play(60) }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = RoundedCornerShape(14.dp)) {
+            Text("Play it fast", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Ink)
+        }
+        if (demoStatus.isNotEmpty()) Text(demoStatus, fontSize = 16.sp)
     }
 
     TextButton(onClick = {
