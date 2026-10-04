@@ -331,7 +331,7 @@ A cool blue-grey paper palette with one committed teal, a navy shell, and transl
 
 A fixed navy sidebar (248px) on the left; the workspace beside it holds a single column capped at 1160px with 36px side gutters and 30px top padding. Every page opens with a page heading: title and sub line on the left, actions on the right, closed by a 2px ink rule with 20px beneath it.
 
-Sheets stack with 16px between them. The nurse shift page splits into a fluid main column and a 300px side column; two-up grids are equal halves with a 16px gap. Inside a sheet the padding is 20px, with a full-bleed head band. Narrow reading pages (onboarding, history, relief, settings) cap at 620 to 720px.
+Sheets stack with 16px between them. The nurse shift page splits into a fluid main column and a 340px side column; two-up grids are equal halves with a 16px gap. Inside a sheet the padding is 20px, with a full-bleed head band. Narrow reading pages (onboarding, history, relief, settings) cap at 620 to 720px.
 
 Responsive behaviour, as built:
 - Below 1100px the side column moves above the main column.
