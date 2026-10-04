@@ -57,7 +57,8 @@ def test_validator_rejects_wrong_shape():
     assert narrative.validate({"headline": "ok", "changes": "x"}, payload()) == "wrong shape"
 
 
-def test_generate_without_key_uses_template():
+def test_generate_without_key_uses_template(monkeypatch):
+    monkeypatch.setattr(narrative.config, "GEMINI_API_KEY", "")
     out = narrative.generate(payload(), use_gemini=True)
     assert out["source"] == "template"
 
@@ -119,3 +120,21 @@ def test_compare_coverage_mismatch_warning():
 def test_compare_with_nothing_released():
     out = compare(req(), [[{"status": "suppressed_k"}], [cell()]], ["A", "B"])
     assert out["interpretation"].startswith("No comparison")
+
+
+def test_bad_model_output_falls_back_to_template(monkeypatch):
+    monkeypatch.setattr(narrative.config, "GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(narrative, "call_gemini", lambda p: {"headline": "Breaks fell by 20 points.", "changes": [], "flags": [], "actions": []})
+    out = narrative.generate(payload(), use_gemini=True)
+    assert out["source"] == "template" and out["rejection"] == "contains a digit"
+
+
+def test_good_model_output_is_used_and_code_writes_the_data_note(monkeypatch):
+    monkeypatch.setattr(narrative.config, "GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(narrative, "call_gemini", lambda p: {
+        "headline": "Night breaks got longer.", "changes": ["No-break shifts rose: {{change_a}}."],
+        "flags": [], "actions": [], "data_note": "Data was tracked."})
+    out = narrative.generate(payload(), use_gemini=True)
+    assert out["source"] == "gemini"
+    assert "20% → 40%" in out["narrative"]["changes"][0]
+    assert out["narrative"]["data_note"] == "Coverage 90%, participation 60%."

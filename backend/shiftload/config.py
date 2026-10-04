@@ -1,5 +1,23 @@
 """Settings and every tunable marked (default) in the spec."""
 import os
+from pathlib import Path
+
+
+def _load_dotenv() -> None:
+    """Read KEY=VALUE lines from the repo's .env. Real environment variables win."""
+    path = Path(__file__).resolve().parents[2] / ".env"
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        if value.strip():
+            os.environ.setdefault(key.strip(), value.strip())
+
+
+_load_dotenv()
 
 _HOST = os.environ.get("SHIFTLOAD_DB_HOST", "localhost:5433/shiftload")
 
@@ -13,7 +31,7 @@ PUBLISHED_DB_URL = os.environ.get(
 # "dev" accepts tokens of the form dev:<role>:<uid>. Firebase is not wired yet.
 AUTH_MODE = os.environ.get("AUTH_MODE", "dev")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
 CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(",")
 COHORT_HASH_SALT = os.environ.get("COHORT_HASH_SALT", "dev-salt")
 

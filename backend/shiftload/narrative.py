@@ -7,6 +7,7 @@ the template.
 """
 import json
 import re
+import time
 
 import httpx
 
@@ -207,6 +208,10 @@ Rules:
 - Describe what changed, never why. Do not use causal wording.
 - If no_red is true, the headline must say there is no evidence of overload in recorded shifts.
 - Never give advice.
+- Keep every sentence short and plain. Put the placeholder at the end, after a comma,
+  for example "Nights: red shifts went down, {{change_a}}."
+- The headline says in plain words what stood out most this week, in under ten words.
+  Do not write "summary" or "overview" in it.
 Return JSON only: {"headline": str, "changes": [str], "flags": [str], "actions": [str], "data_note": str}
 One sentence per item, in the list matching the item's kind. data_note mentions each data key.
 Items:
@@ -219,7 +224,11 @@ def call_gemini(payload: dict) -> dict:
         "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
     }
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{config.GEMINI_MODEL}:generateContent"
-    r = httpx.post(url, json=body, headers={"x-goog-api-key": config.GEMINI_API_KEY}, timeout=30)
+    for attempt in range(4):
+        r = httpx.post(url, json=body, headers={"x-goog-api-key": config.GEMINI_API_KEY}, timeout=30)
+        if r.status_code != 503:     # busy: wait and try again (a 429 quota error is not retried)
+            break
+        time.sleep(4 * (attempt + 1))
     r.raise_for_status()
     return json.loads(r.json()["candidates"][0]["content"]["parts"][0]["text"])
 
@@ -230,11 +239,15 @@ def generate(payload: dict, use_gemini: bool) -> dict:
     if use_gemini and config.GEMINI_API_KEY and payload["status"] == "released":
         try:
             candidate = call_gemini(payload)
+            # the data note is only numbers, so code always writes it
+            if isinstance(candidate, dict):
+                candidate["data_note"] = template_narrative(payload)["data_note"]
             rejection = validate(candidate, payload)
             if rejection is None:
                 return {"narrative": render(candidate, payload), "source": "gemini", "rejection": None}
         except Exception as exc:  # network or parse failure: fall back to the template
-            rejection = f"call failed: {type(exc).__name__}"
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            rejection = f"call failed: {status or type(exc).__name__}"
     return {"narrative": render(template_narrative(payload), payload), "source": "template",
             "rejection": rejection}
 
