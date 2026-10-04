@@ -7,7 +7,6 @@ import {
   Activity,
   BarChart3,
   ClipboardList,
-  Coffee,
   Columns2,
   Hand,
   HeartPulse,
@@ -170,7 +169,7 @@ const NAV: Record<Role, { section: string; items: NavItem[] }> = {
       { label: "Settings & privacy", href: "/nurse/settings", icon: Settings },
     ],
   },
-  charge_nurse: { section: "Relief", items: [{ label: "Relief requests", href: "/relief", icon: Coffee }] },
+  charge_nurse: { section: "Charge nurse", items: [] },
   manager: {
     section: "Manager",
     items: [
@@ -192,7 +191,7 @@ const NAV: Record<Role, { section: string; items: NavItem[] }> = {
 
 const ROLE_LABEL: Record<Role, string> = {
   nurse: "Nurse",
-  charge_nurse: "Relief recipient",
+  charge_nurse: "Charge nurse",
   manager: "Manager",
   joint_committee: "Joint committee",
   admin: "Trustee",

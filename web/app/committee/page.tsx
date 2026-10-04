@@ -69,7 +69,7 @@ export default function CommitteePage() {
               About {gap.red_shifts_about} red shifts, about {gap.reports_sent_about} reported.
             </div>
             <p className="sub">
-              Over {gap.weeks.length} weeks · about {gap.relief_requests_about} relief requests
+              Over {gap.weeks.length} weeks
             </p>
             <div className="bar-track" style={{ height: 14, marginBottom: 6 }} title="Share of red shifts that were reported">
               <div style={{ width: `${Math.min(100, (100 * gap.reports_sent_about) / Math.max(1, gap.red_shifts_about))}%`, background: "var(--load-4)" }} />
@@ -89,7 +89,6 @@ export default function CommitteePage() {
                     <th style={{ width: "40%" }} aria-label="Red shifts bar" />
                     <th className="num">Red shifts</th>
                     <th className="num">Reports sent</th>
-                    <th className="num">Relief requests</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -104,7 +103,6 @@ export default function CommitteePage() {
                       </td>
                       <td className="num">{w.red_shifts_noised}</td>
                       <td className="num">{w.reports_sent_noised}</td>
-                      <td className="num">{w.relief_requests_noised}</td>
                     </tr>
                   ))}
                 </tbody>

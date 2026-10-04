@@ -113,7 +113,7 @@ export function WeeklyReport({ unit, week, scenario, full }: { unit: string; wee
           {report.counts && (
             <p className="sub">
               About {report.counts.red_shifts_noised} red shifts, {report.counts.reports_sent_noised} workload reports
-              sent, {report.counts.relief_requests_noised} relief requests (counts carry added noise).
+              sent (counts carry added noise).
             </p>
           )}
           {report.actions.length > 0 && (

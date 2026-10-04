@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, ChevronRight, Copy, Play, Send, ShieldCheck, Zap } from "lucide-react";
 import { Break, ShiftChart, Span, Win } from "@/components/ShiftChart";
 import { BAND_COLOR, Badge, BandChip, ErrorLine, Mode, More, PageHeading, Panel, Ring, Toggle, useRole } from "@/components/ui";
@@ -11,8 +11,6 @@ export type Me = {
   unit_name: string;
   onboarded: boolean;
   baseline_status: string;
-  relief_recipient: string;
-  auto_relief: boolean;
   paused_until: string | null;
   purpose_limit: string;
 };
@@ -28,8 +26,6 @@ type Current = {
   suggested_breaks: Break[];
   since_break_min: number;
   sleep_before_min: number | null;
-  nudge: boolean;
-  relief_pending: boolean;
 };
 
 type Card = {
@@ -53,12 +49,6 @@ type Card = {
 
 type Proposal = { end_ts: string; breaks: { id: string; start_ts: string; end_ts: string }[] };
 
-const RECIPIENTS = [
-  ["charge", "Charge nurse"],
-  ["buddy", "Break buddy"],
-  ["float", "Float nurse"],
-] as const;
-const recipientLabel = (v: string) => RECIPIENTS.find(([k]) => k === v)?.[1] ?? v;
 
 const LOAD_WORD: Record<string, string> = { green: "Light to moderate", amber: "Heavy", red: "Very heavy", insufficient: "Not enough data" };
 const SHIFT_WORD: Record<string, [string, string]> = {
@@ -95,10 +85,9 @@ function Onboarding({ me, done }: { me: Me; done: () => void }) {
   const [step, setStep] = useState(0);
   const [birthYear, setBirthYear] = useState("");
   const [pattern, setPattern] = useState("day");
-  const [recipient, setRecipient] = useState("charge");
   const [error, setError] = useState<string | null>(null);
   const year = Number(birthYear);
-  const steps = ["Consent", "About you", "Relief"];
+  const steps = ["Consent", "About you"];
 
   return (
     <div style={{ maxWidth: 620 }}>
@@ -139,29 +128,14 @@ function Onboarding({ me, done }: { me: Me; done: () => void }) {
                 <option value="rotating">Rotating</option>
               </select>
             </label>
-            <button className="primary big" disabled={!(year >= 1940 && year <= 2010)} onClick={() => setStep(2)}>
-              Continue <ArrowRight size={18} />
-            </button>
-          </div>
-        )}
-        {step === 2 && (
-          <div className="stack">
-            <h2>Who should get your relief requests?</h2>
-            <div className="choice">
-              {RECIPIENTS.map(([k, label]) => (
-                <button key={k} className={recipient === k ? "pressed" : ""} onClick={() => setRecipient(k)}>
-                  {label}
-                </button>
-              ))}
-            </div>
             <ErrorLine error={error} />
             <button
               className="primary big"
+              disabled={!(year >= 1940 && year <= 2010)}
               onClick={() =>
                 nurseApi("/onboarding", {
                   birth_year: year,
                   rotation: { pattern, start_hour: pattern === "night" ? 19 : 7 },
-                  relief_recipient: recipient,
                 }).then(done, (e) => setError(e.message))
               }
             >
@@ -182,7 +156,6 @@ export function Today({ me }: { me: Me }) {
   const [card, setCard] = useState<Card | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
-  const autoSent = useRef<string | null>(null);
 
   const refresh = useCallback(() => {
     nurseApi<Current>("/me/shift/current").then(setCur, (e) => setError(e.message));
@@ -194,17 +167,6 @@ export function Today({ me }: { me: Me }) {
   }, [refresh]);
 
   const shift = cur?.shift ?? null;
-  const requestRelief = useCallback(() => {
-    nurseApi("/relief", { recipient_type: me.relief_recipient }).then(refresh, (e) => setError(e.message));
-  }, [me.relief_recipient, refresh]);
-
-  // pre-enabled auto-request: sent once per shift when the nudge fires
-  useEffect(() => {
-    if (me.auto_relief && cur?.nudge && shift && autoSent.current !== shift.shift_id) {
-      autoSent.current = shift.shift_id;
-      requestRelief();
-    }
-  }, [me.auto_relief, cur?.nudge, shift, requestRelief]);
 
   if (!cur) return <ErrorLine error={error} />;
 
@@ -264,7 +226,7 @@ export function Today({ me }: { me: Me }) {
   const m = cur.metrics;
   const since = cur.since_break_min;
   const breakColor = since >= 300 ? "var(--critical)" : since >= 240 ? "var(--warning)" : "var(--teal-bright)";
-  const breakWord = since >= 300 ? "Over 5 hours — ask for relief" : since >= 240 ? "A break is due soon" : "On track";
+  const breakWord = since >= 300 ? "Over 5 hours without a break" : since >= 240 ? "A break is due soon" : "On track";
   const lines = highlightLines(cur, shift.start_ts);
   const active = picked === null ? null : lines.find((l) => l.key === picked) ?? null;
   const nowLoad = [...cur.windows].reverse().find((w) => w.pct_hrr !== null)?.pct_hrr ?? null;
@@ -402,24 +364,6 @@ export function Today({ me }: { me: Me }) {
             <h2 style={{ color: since >= 300 ? "var(--critical)" : undefined }}>{breakWord}</h2>
           </section>
 
-          {!recorded && (
-          <section className="panel relief-card">
-            {cur.relief_pending ? (
-              <>
-                <h2>Help is on the way</h2>
-                <p>Your {recipientLabel(me.relief_recipient).toLowerCase()} has been told. They see your name only.</p>
-              </>
-            ) : (
-              <>
-                <h2>Need a break?</h2>
-                <p>Your {recipientLabel(me.relief_recipient).toLowerCase()} sees your name only.</p>
-                <button className="big" onClick={requestRelief}>
-                  Request relief <ArrowRight size={18} />
-                </button>
-              </>
-            )}
-          </section>
-          )}
         </aside>
       </div>
     </>
@@ -755,21 +699,6 @@ export function Settings({ me, reload }: { me: Me; reload: () => void }) {
                 <button onClick={() => save({ pause_days: 7 })}>Pause for 7 days</button>
               </div>
             )}
-          </Panel>
-          <Panel title="Relief requests">
-            <div className="stack">
-              <div className="pills">
-                {RECIPIENTS.map(([k, label]) => (
-                  <button key={k} className={me.relief_recipient === k ? "on" : ""} onClick={() => save({ relief_recipient: k })}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <div className="row" style={{ justifyContent: "space-between" }}>
-                <span className="sub">Ask automatically after 5 hours without a break</span>
-                <Toggle value={me.auto_relief} label="Automatic relief requests" onChange={() => save({ auto_relief: !me.auto_relief })} />
-              </div>
-            </div>
           </Panel>
         </div>
         <div>

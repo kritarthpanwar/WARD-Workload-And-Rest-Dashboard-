@@ -8,12 +8,10 @@ import { ErrorLine, More, ROLE_ICON } from "@/components/ui";
 import { NURSE_API, Role, saveSession } from "@/lib/api";
 import { auth } from "@/lib/firebase";
 
-const HOME: Record<Role, string> = { nurse: "/nurse", charge_nurse: "/relief", manager: "/manager", joint_committee: "/committee", admin: "/trustee" };
+const HOME: Record<Role, string> = { nurse: "/nurse", charge_nurse: "/", manager: "/manager", joint_committee: "/committee", admin: "/trustee" };
 
 const DEMO: { role: Role; uid: string; title: string; text: string }[] = [
   { role: "nurse", uid: "demo-nurse", title: "Nurse", text: "Alex R. — my shift, my breaks, my history" },
-  { role: "nurse", uid: "demo-nurse-2", title: "Second nurse", text: "Sam K. — for trying relief requests" },
-  { role: "charge_nurse", uid: "demo-charge", title: "Relief recipient", text: "Who is asking for relief right now" },
   { role: "manager", uid: "demo-manager", title: "Manager", text: "How each unit’s week went" },
   { role: "joint_committee", uid: "demo-committee", title: "Joint committee", text: "Reporting gap and who looked at what" },
   { role: "admin", uid: "demo-trustee", title: "Trustee", text: "Publishes the weekly numbers" },
